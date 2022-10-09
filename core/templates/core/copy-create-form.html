@@ -2,10 +2,6 @@
 
 {% block content %}
 
-
-<h1>Create a copy for {{ book.title }}</h1>
-
-
 <style type="text/css">
     .alert{
         height: 40px;
@@ -37,16 +33,36 @@
         margin-left: 10px;
 
     }
+    .heading{
+        display: flex;
+        justify-content: center;
+    }
 </style>
+
+<div class="heading">
+    <h1>Create a copy for "{{ book.title }}"" <hr></h1>
+</div>
+
+
 
 
 {% for message in messages %}
+    {% if message.message == 'Copy added successfully'  %}
+        <div class="alert alert-success d-flex align-items-center" role="alert">
+            <svg class="bi flex-shrink-0 me-2" role="img" aria-label="Success:"><use xlink:href="#check-circle-fill"/></svg>
+            <div class="text">
+                {{ message }}
+            </div>
+        </div>
+    {% else %}
         <div class="alert alert-danger d-flex align-items-center" role="alert">
             <svg class="bi flex-shrink-0 me-2" role="img" aria-label="Danger:"><use xlink:href="#exclamation-triangle-fill"/></svg>
             <div class="text">
                 {{ message }}
             </div>
         </div>
+    {% endif %}
+        
 {% endfor %}
 
 
@@ -61,9 +77,9 @@
     <br>
 
     <div class="copy-form-btn">
-        <input type="submit", name="save", value="save", class="btn btn-success w-20">
-        <input type="submit", name="save_and_continue", value="save and continue", class="btn btn-primary w-50">
-        <input type="submit", name="deleteBook", value="exit", class="btn btn-danger w-20">
+        <input type="submit", name="save", value="Save", class="btn btn-success w-20">
+        <input type="submit", name="save_and_continue", value="Save and Continue", class="btn btn-primary w-50">
+        <input type="submit", name="exit", value="Exit", class="btn btn-danger w-20">
     </div>
 
 </form>

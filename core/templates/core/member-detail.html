@@ -10,6 +10,8 @@
             width: 50%;
             display: flex;
             justify-content: center;
+            /* border: 1px solid black; */
+
         }
         .alert svg{
             width: 20px;
@@ -38,9 +40,25 @@
         }
         .action-buttons{
             display: flex;
+            margin-top: -70px;
         }
         .action-buttons input{
             margin-left: 20px;
+        }
+        .back-btn{
+            position: relative;
+            margin-bottom: -20px;
+            margin-left: 50px;
+        }
+        .member-name{
+            font-size: 40px;
+            margin-bottom: -10px;
+            margin-top: 10px;
+        }
+        .information{
+            border: 1px solid black;
+            margin-left: 650px;
+            top: -100px;
         }
     </style>
 
@@ -58,7 +76,19 @@
     {% endfor %}
 
 
+    <div class="back-btn">
+        <a href="{% url 'core:member_list' %}">
+            <button class="btn btn-primary">Go back</button>
+        </a>
+    </div>
+
+
     <div class="member">
+
+        <div class="member-name">
+            {{ member.name }}
+            <hr>
+        </div>
 
         {% if member.gender == "male" %}
             <img src="{% static 'assets/img/circle male.png' %}" alt="" width="200">
@@ -66,10 +96,10 @@
             <img src="{% static 'assets/img/circle female.png' %}" alt="" width="200">
         {% endif %}
 
-        <div class="dropdown">
+        <div class="dropdown information">
 
-            <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                {{ member.name }}
+            <button class=" btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                Information
             </button>
 
             <ul class="dropdown-menu">
@@ -110,6 +140,8 @@
                         {{ member.phone_number }}</a>
                     </li>
                 {% endif %}
+
+                 <li>Registered: {{ member.date_joined }}</li>
             </ul>
 
         </div>
@@ -117,7 +149,11 @@
         <hr>
 
         <div class="action-buttons">
-            <a href="{% url 'core:book_borrow' member.id %}"><button class="btn btn-primary">Borrow a Book</button></a>
+            {% if member.borrowed_book.exists %}
+                <button class="btn btn-secondary">Borrow a Book</button>
+            {% else %}
+                <a href="{% url 'core:book_borrow' member.id %}"><button class="btn btn-primary">Borrow a Book</button></a>
+            {% endif %}
 
             {% if member.borrowed_book.exists %}
                 <input type="button", value="Remove member" class="btn btn-secondary">
@@ -141,7 +177,7 @@
                         {% csrf_token %}
 
                         {% for book in book %}
-                            <li>{{ book.book }}: {{ book.book_serial }}
+                            <li>{{ book.book }}: {{ book.copy }}
                                 <button class="btn btn-primary btn-sm", name="returnBook", value="returnBook">
                                     Return Book
                                 </button>

@@ -29,7 +29,6 @@ class MembershipCreationForm(forms.ModelForm):
             "college",
             "department",
             "residence_hall",
-            "hall_block",
             "room",
         )
 

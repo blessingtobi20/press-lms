@@ -49,25 +49,38 @@
 
 
 
+    {% if member.borrowed_book.exists %}
 
-    <form action="", method="post">
-        {% csrf_token %}
-
-
-        {{ form | crispy }}
-
+        <div class="borrow-book">
+            <div class="alert alert-danger d-flex align-items-center" role="alert">
+                <svg class="bi flex-shrink-0 me-2" role="img" aria-label="Danger:"><use xlink:href="#exclamation-triangle-fill"/></svg>
+                <div class="text">
+                    Previous books has to be returned before borrowing another
+                </div>
+            </div>
+        </div>
         
-        Return Date
-        <input type="date" name="return_date" class="textinput textInput form-control">
+    {% else %}
+        <form action="", method="post">
+            {% csrf_token %}
+            {{ form | crispy }}
+            <br>
+            
+            Return Date
+            <input type="date" name="return_date" class="textinput textInput form-control">
+            <br>
 
-        Serial Number
-        <br>
+            Serial Number
+            <input type="text", name="unique_num", class="textinput textInput form-control">
+            <br>
 
-        <input type="submit", value="Borrow" class="btn btn-success" >
-        <br><br>
-        <a href="{% url 'core:member_detail' member.id %}"><input type="button" value="Go back" class="btn btn-primary"></a>
+            <input type="submit", value="Borrow" class="btn btn-success" >
+            <br><br>
+            <a href="{% url 'core:member_detail' member.id %}"><input type="button" value="Go back" class="btn btn-primary"></a>
 
-    </form>
+        </form>
+
+    {% endif %}
 </div>
 
 {% endblock content %}

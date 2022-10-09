@@ -15,7 +15,7 @@ from django.contrib.auth import authenticate, login
 @login_required
 def member_list(request):
     member = Membership.objects.all()
-    book = Book.objects.all()
+    book = BorrowedBook.objects.all()
     return render(request, "core/member-list.html", {"member": member, "book": book})
 
 
@@ -33,7 +33,6 @@ def member_create(request):
             level = form.cleaned_data['current_level']
             gender = form.cleaned_data['gender']
             hall = form.cleaned_data['residence_hall']
-            block = form.cleaned_data['hall_block']
             room = form.cleaned_data['room']
 
             college = form.cleaned_data['college']
@@ -41,8 +40,8 @@ def member_create(request):
 
             new_member = Membership.objects.create(user=current_user, name=name, email=email, phone_number=number,
                                                     reg=reg, current_level=level, gender=gender,
-                                                    residence_hall=hall, hall_block=block,
-                                                    room=room, college=college, department=department)
+                                                    residence_hall=hall, room=room, 
+                                                    college=college, department=department)
             new_member.save()
 
             notification_heading = "Membership Creation"
@@ -70,13 +69,14 @@ def member_detail(request, pk):
         
         for item in borrowed_book:
             book.append(item)
+            print(book)
 
             if request.method == "POST":    
                 if request.POST.get("returnBook"):
                     item.delete()
 
                     notification_heading = "Book Returning"
-                    notification_message = f"{member.name} returned a '{item.book.title}': {item.borrowed_book_copy.unique_number}"
+                    notification_message = f"{member.name} returned a '{item.book.title}': {item.copy.unique_number}"
                     alert = Notification.objects.create(heading=notification_heading, message=notification_message)
                     alert.save()
 
@@ -90,7 +90,7 @@ def member_detail(request, pk):
             messages.success(request, "Membership terminated successfully")
             return redirect("core:member_list")
 
-    return render(request, "core/member-detail.html", {"member": member, "book": book})
+    return render(request, "core/member-detail2.html", {"member": member, "book": book})
 
 
 def book_borrow(request, pk):
@@ -105,7 +105,7 @@ def book_borrow(request, pk):
         if form.is_valid():
             book_name = form.cleaned_data["book"]
             return_date = request.POST["return_date"]
-            unique_num = request.POST["serial_num"]            
+            unique_num = request.POST["unique_num"]            
 
             if Book.objects.filter(title=book_name).exists():
                 the_book = Book.objects.get(title=book_name)
@@ -165,30 +165,7 @@ def book_create(request):
             new_book.save()
 
             return redirect("core:book_copy", new_book.id)
-
-            '''
-            # To create many books as possible
-            # amount = 0
-            # if amount < quantity:
-            #     while amount < quantity:
-            #         amount += 1
-            #         serial = auto_generate(n=10)
-            #         book = Copy.objects.create(book=new_book, unique_number=serial)
-            #         book.save()
-
-            #     notification_heading = "Book Creation"
-            #     notification_message = f"Uploaded '{title}' book with {quantity} copies"
-            #     alert = Notification.objects.create(heading=notification_heading, message=notification_message)
-            #     alert.save()
-
-            #     messages.info(request, "Book added Successfully!")
-            #     return redirect("core:book_list")
             
-            else:
-                new_book.delete()
-                messages.info(request, "Book quantity field error")
-                return redirect("core:book_create")
-                '''
         else:
             messages.info(request, "Form is not valid!")
             return redirect("core:book_create")
@@ -235,11 +212,8 @@ def copy_create(request, pk):
             messages.info(request, 'Copy added successfully')
             return redirect("core:book_copy", book.id)
 
-        elif request.POST.get('deleteBook'):
-            book.delete()
-
-            messages.success(request, 'Book removed successfully')
-            return redirect("core:book_list")
+        elif request.POST.get('exit'):
+            return redirect("core:book_detail", book.id)
 
     return render(request, 'core/copy-create-form.html', {"book": book})
 

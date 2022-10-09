@@ -27,9 +27,13 @@
         position: relative;
         top: 10px;
     }
+    .heading{
+            /* border: 1px solid black; */
+
+    }
 </style>
 
-
+<div class="heading">
     <div class="top">
         <h1>List of books</h1>
     
@@ -44,6 +48,9 @@
             </a>
         </div>
     </div>
+    <hr>
+</div>
+
     
 
     {% for message in messages %}
@@ -56,20 +63,11 @@
     {% endfor %}
 
 
-
-
-  
-
-
-
-
-
     <div class="row row-cols-1 row-cols-md-5 g-4">
 
         <table class="table table-striped">
             
             <tr>
-                <th>#</th>
                 <th>
                     Title
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-book" viewBox="0 0 16 16">
@@ -101,9 +99,6 @@
             </tr>
             {% for book in book %}
             <tr>
-                <td>
-                    
-                </td>
                 <td>
                     <a href="{% url 'core:book_detail' book.id %}">
                         {{ book.title }}

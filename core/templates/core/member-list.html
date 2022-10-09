@@ -70,7 +70,11 @@
     <div class="create-btn">
         <a href="{% url 'core:member_create' %}">
             <button class="btn btn-success">
-                Create a new member
+                Create a member
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-circle" viewBox="0 0 16 16">
+                    <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/>
+                    <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z"/>
+                </svg>
             </button>
         </a>
     </div>
@@ -84,13 +88,29 @@
             <div class="row g-0">
             
                 {% if member.gender == "male" %}
-                    <div class="col-md-4">
-                        <img src="{% static 'assets/img/male avatar.png' %}" class="img-fluid rounded-start" alt="...">
-                    </div>
+                    {% if member.reg %}
+                        <div class="col-md-4">
+                            <br>
+                            <img src="{% static 'assets/img/male with badge.png' %}" class="img-fluid rounded-start" alt="...">
+                        </div>
+                    {% else %}
+                        <div class="col-md-4">
+                            <br>
+                            <img src="{% static 'assets/img/male avatar.png' %}" class="img-fluid rounded-start" alt="...">
+                        </div>
+                    {% endif %}
                 {% elif member.gender == "female" %}
-                    <div class="col-md-4">
-                        <img src="{% static 'assets/img/female avatar.png' %}" class="img-fluid rounded-start" alt="...">
-                    </div>
+                    {% if member.reg %}
+                        <div class="col-md-4">
+                            <br>
+                            <img src="{% static 'assets/img/female with badge.png' %}" class="img-fluid rounded-start" alt="...">
+                        </div>
+                    {% else %}
+                        <div class="col-md-4">
+                            <br>
+                            <img src="{% static 'assets/img/female avatar.png' %}" class="img-fluid rounded-start" alt="...">
+                        </div>
+                    {% endif %}
                 {% endif %}
 
                 <div class="col-md-8">
@@ -100,18 +120,22 @@
                         </a>
 
                         {% if member.reg %}
-                            <p class="card-text reg-no">{{ member.reg }}</p>
+                            <p class="card-text reg-no">{{ member.reg }}<hr></p>
                         {% endif %}
 
+
                         {% if member.borrowed_book.exists %}
+                        
                             {% for book in book %}
                                 {% if book.borrower == member %}
                                     <p class="card-text"><small class="text-muted">Book borrowed: {{ book.book }}</small></p>
                                 {% endif %}
                             {% endfor %}
+
                         {% else %}
                             <p class="card-text"><small class="text-muted">No recent activities</small></p>
                         {% endif %}
+                        
                     </div>
                 </div>
             </div>
