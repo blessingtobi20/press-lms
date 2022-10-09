@@ -1,0 +1,75 @@
+{% load static %}
+<!-- This is the navbar file     -->
+
+
+<style type="text/css">
+  .buttons{
+    position: relative;
+    top: 10px;
+    display: flex;
+    justify-content: space-between;
+   }
+   .buttons img{
+    /* border: 1px solid black; */
+   }
+   .links{
+    padding-top: 13px;
+    /* border: 1px solid black; */
+    /* margin-left: 349px; */
+   }
+   .links a{
+    margin-left: 30px;
+    text-decoration: none;
+    color: rgb(103, 106, 109);
+    position: relative;
+   }
+    .links a::after{
+    content: '';
+    width: 0;
+    height: 3px;
+    position: absolute;
+    bottom: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgb(214, 137, 114);
+    transition: width 0.4s;
+  }
+  .links a:hover::after{
+    width: 30px;
+  }
+  .logo-name{
+    font-size: 40px;
+  }
+
+</style>
+
+
+<div class="buttons">
+  
+
+  
+  <div class="logo logo-name" >
+
+    Press<img src="{% static 'assets/img/press logo.png' %}" alt="" style="width: 60px; height: 50px;" >Library
+
+  </div>
+
+  <!-- {% if request.user.is_authenticated %}
+    <p class="logo-name">logged as: {{ request.user.username }}  </p>
+  {% endif %} -->
+
+  <div class="links">
+    {% if request.user.is_authenticated %}
+      <a href="{% url 'core:member_list' %}">Members</a>
+      <a href="{% url 'core:book_list' %}">Books</a>
+      <a href="{% url 'core:notification' %}">Notification</a>
+      <a href="{% url 'core:profile' %}">profile</a>
+    {% else %}
+      <a href="{% url 'account:login' %}">Login</a>
+      <a href="{% url 'account:signup' %}">Signup</a>
+    {% endif %}
+  </div>
+  
+</div>
+
+<br>

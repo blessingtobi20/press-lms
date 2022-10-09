@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+
+<h1>Create a copy for {{ book.title }}</h1>
+
+
+<style type="text/css">
+    .alert{
+        height: 40px;
+    }
+    .alert svg{
+        width: 20px;
+    }
+    .alert svg{
+        margin-left: 40%;
+    }
+    .text{
+        margin-left: 10px;
+    }
+    form{
+        /* border: 1px solid black; */
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        margin-left: 40%;
+    }
+    form input[type=text]{
+        width: 64%;
+     
+    }
+    .copy-form-btn{
+        display: flex;
+    }
+    .copy-form-btn input{
+        margin-left: 10px;
+
+    }
+</style>
+
+
+{% for message in messages %}
+        <div class="alert alert-danger d-flex align-items-center" role="alert">
+            <svg class="bi flex-shrink-0 me-2" role="img" aria-label="Danger:"><use xlink:href="#exclamation-triangle-fill"/></svg>
+            <div class="text">
+                {{ message }}
+            </div>
+        </div>
+{% endfor %}
+
+
+<form method="post">
+    {% csrf_token %}
+
+    <div class="form-floating mb-3">
+        <input type="text" name="book_number" class="form-control", placeholder="Unique number" id="floatingInput">
+        <label for="floatingInput">Unique Number</label>
+    </div>
+    
+    <br>
+
+    <div class="copy-form-btn">
+        <input type="submit", name="save", value="save", class="btn btn-success w-20">
+        <input type="submit", name="save_and_continue", value="save and continue", class="btn btn-primary w-50">
+        <input type="submit", name="deleteBook", value="exit", class="btn btn-danger w-20">
+    </div>
+
+</form>
+
+
+{% endblock content %}

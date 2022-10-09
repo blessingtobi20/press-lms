@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block content %}
+
+<style type="text/css">
+
+    .create-btn{
+        top: 20%;
+        margin-bottom: 20px;
+    }
+    .create-btn a{
+        text-decoration: none;
+    }
+    h1{
+        padding-bottom: -5%;
+    }
+    .alert{
+        height: 40px;
+    }
+    .alert svg{
+        width: 20px;
+    }
+    .alert svg{
+        margin-left: 40%;
+    }
+    .text{
+        margin-left: 10px;
+    }
+    .card-body a{
+        text-decoration: none;
+        color: rgb(29, 108, 173);
+    }
+    .card{
+        margin-left: 20px;
+    }
+    .reg-no{
+        font-size: 20px;
+    }
+    .list-heading{
+        display: flex;
+        justify-content: space-between;
+    }
+    .heading{
+        font-size: 30px;
+        font-style: ;
+    }
+</style>
+
+<!-- <h1>Membership List</h1> -->
+<!-- <hr> -->
+
+
+{% for message in messages %}
+    <div class="alert alert-success d-flex align-items-center" role="alert">
+    <svg class="bi flex-shrink-0 me-2" role="img" aria-label="Success:"><use xlink:href="#check-circle-fill"/></svg>
+    <div class="text">
+        {{ message }}   
+    </div>
+  </div>
+{% endfor %}
+
+
+<div class="list-heading">
+    <div class="heading">
+        <h1>Memberships</h1>
+    </div>
+
+    <div class="create-btn">
+        <a href="{% url 'core:member_create' %}">
+            <button class="btn btn-success">
+                Create a new member
+            </button>
+        </a>
+    </div>
+</div>
+
+<hr>
+
+
+{% for member in member %}
+        <div class="card mb-4" style="max-width: 350px;">
+            <div class="row g-0">
+            
+                {% if member.gender == "male" %}
+                    <div class="col-md-4">
+                        <img src="{% static 'assets/img/male avatar.png' %}" class="img-fluid rounded-start" alt="...">
+                    </div>
+                {% elif member.gender == "female" %}
+                    <div class="col-md-4">
+                        <img src="{% static 'assets/img/female avatar.png' %}" class="img-fluid rounded-start" alt="...">
+                    </div>
+                {% endif %}
+
+                <div class="col-md-8">
+                    <div class="card-body">
+                        <a href="{% url 'core:member_detail' member.id %}">
+                            Name: <h5 class="card-title">{{ member.name|truncatechars:15 }}</h5>
+                        </a>
+
+                        {% if member.reg %}
+                            <p class="card-text reg-no">{{ member.reg }}</p>
+                        {% endif %}
+
+                        {% if member.borrowed_book.exists %}
+                            {% for book in book %}
+                                {% if book.borrower == member %}
+                                    <p class="card-text"><small class="text-muted">Book borrowed: {{ book.book }}</small></p>
+                                {% endif %}
+                            {% endfor %}
+                        {% else %}
+                            <p class="card-text"><small class="text-muted">No recent activities</small></p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+{% endfor %}
+
+
+
+{% endblock content %}

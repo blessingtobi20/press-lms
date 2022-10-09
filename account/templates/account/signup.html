@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% load crispy_forms_tags %}
+
+{% block content %}
+
+<style type="text/css">
+   .alert{
+        height: 40px;
+        width: 50%;
+        display: flex;
+        justify-content: center;
+    }
+    .alert svg{
+        width: 20px;
+    }
+    .signup-form input{
+        width: 450px;
+    }
+    .form-center{
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        }
+</style>
+
+<h1 style="text-align: center;">Create an account</h1>
+<hr>
+
+{% for message in messages %}
+<div class="alert alert-danger d-flex align-items-center" role="alert">
+    <svg class="bi flex-shrink-0 me-2" role="img" aria-label="Danger:"><use xlink:href="#exclamation-triangle-fill"/></svg>
+    
+    <div class="text">
+        {{ message }}
+    </div>
+</div>
+{% endfor %}
+
+<div class="signup-form">
+    <form class="form-center" action="", method="post">
+        {% csrf_token %}
+        {{ form | crispy }}
+        
+        <br>
+        <p>Already have an account? <a href="{% url 'account:login' %}">click here</a></p>
+
+        <input type="submit", name="submit", value="submit" class="btn btn-primary">
+    </form>
+</div>
+
+{% endblock content %}
