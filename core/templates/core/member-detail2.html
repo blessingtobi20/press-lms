@@ -5,13 +5,23 @@
 {% block content %}
 
 <style type="text/css">
+    .alert{
+        height: 40px;
+        width: 50%;
+        display: flex;
+        justify-content: center;
+    }
+    .alert svg{
+        width: 20px;
+    }
+    .text{
+        margin-left: 10px;
+    }
     .member{
         display: flex;
-        /* border: 1px solid black; */
     }
     .member-name{
         font-size: 24px;
-        /* border: 1px solid black; */
         min-width: 50%;
         height: 45px;
         margin-top: 60px;
@@ -22,6 +32,36 @@
     }
     .others svg{
         width: 40px;
+    }
+    .borrowing{
+        margin-top: -200px;
+        margin-left: 700px;
+        max-width: 500px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    .action-buttons{
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    .action-buttons input{
+        margin-left: 20px;
+    }
+    .borrowed-book button{
+            position: relative;
+            /* margin-top: 10px; */
+            margin-left: 26px;
+        }
+    .borrow-form a{
+        margin-left: 15px;
+        text-decoration: none;
+        color:  rgb(29, 108, 173);
+    }
+    .borrow-form button{
+        margin-top: 10px;
+        margin-bottom: 10px;
     }
 </style>
 
@@ -53,8 +93,6 @@
         <div class="member-name">
             {{ member.name }} ( {{ member.reg }} )
 
-            
-
             <div class="others">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-mortarboard-fill" viewBox="0 0 16 16">
                     <path d="M8.211 2.047a.5.5 0 0 0-.422 0l-7.5 3.5a.5.5 0 0 0 .025.917l7.5 3a.5.5 0 0 0 .372 0L14 7.14V13a1 1 0 0 0-1 1v2h3v-2a1 1 0 0 0-1-1V6.739l.686-.275a.5.5 0 0 0 .025-.917l-7.5-3.5Z"/>
@@ -70,6 +108,7 @@
             </div>
 
             <hr  width="300px">
+
             <div class="dropdown information">
 
                 <button class=" btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -107,9 +146,45 @@
 
             </div>
 
+            <br>
+            Joined: {{ member.date_joined }}
         </div>
         
     {% endif %}
+</div>
+
+
+<div class="borrowing">
+
+    <div class="action-buttons">
+        {% if member.borrowed_book.exists %}
+            <button class="btn btn-secondary">Borrow a Book</button>
+        {% else %}
+            <a href="{% url 'core:book_borrow' member.id %}"><button class="btn btn-primary" style="width: 200px;">Borrow a Book</button></a>
+        {% endif %}
+    </div>
+
+    <div class="borrowed-book">
+        <div class="card" style="width: 30rem;">
+
+            <div class="card-header">
+                Borrowed Book
+            </div>
+
+            <form method="post" class="borrow-form">
+                {% csrf_token %}
+
+                {% if owing %}
+                    <a href="{% url 'core:book_detail' owing.book.id %}">{{ owing.book|truncatechars:25  }}: {{ owing.copy }}</a>
+                    <button class="btn btn-primary btn-sm", name="returnBook", value="returnBook">
+                        Return Book
+                    </button>
+                    <br>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+
 </div>
 
 {% endblock content %}

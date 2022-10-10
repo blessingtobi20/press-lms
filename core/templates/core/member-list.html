@@ -126,9 +126,9 @@
 
                         {% if member.borrowed_book.exists %}
                         
-                            {% for book in book %}
+                            {% for book in books %}
                                 {% if book.borrower == member %}
-                                    <p class="card-text"><small class="text-muted">Book borrowed: {{ book.book }}</small></p>
+                                    <p class="card-text"><small class="text-muted">Borrowed: {{ book.book|truncatechars:15}}</small></p>
                                 {% endif %}
                             {% endfor %}
 

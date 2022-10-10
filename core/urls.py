@@ -29,7 +29,6 @@ urlpatterns = [
     path('profile', views.profile, name="profile"),
     path('profile/members', views.profile_member, name="profile_member"),
     path('profile/books', views.profile_book, name="profile_book"),
-    path('profile/delete', views.profile_library_delete, name="profile_delete"),
     path('profile/change_password', views.profile_password_change, name="profile_password_change"),
 
 ]

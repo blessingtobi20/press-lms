@@ -15,8 +15,8 @@ from django.contrib.auth import authenticate, login
 @login_required
 def member_list(request):
     member = Membership.objects.all()
-    book = BorrowedBook.objects.all()
-    return render(request, "core/member-list.html", {"member": member, "book": book})
+    borrowedbooks = BorrowedBook.objects.all()
+    return render(request, "core/member-list.html", {"member": member, "books": borrowedbooks})
 
 
 def member_create(request):
@@ -63,25 +63,22 @@ def member_detail(request, pk):
 
     member = Membership.objects.get(id=pk)
 
-    book = []
+    owing_book = []
     if member.borrowed_book.exists():
-        borrowed_book = member.borrowed_book.all()
+        owing_book = BorrowedBook.objects.get(borrower=member)
         
-        for item in borrowed_book:
-            book.append(item)
-            print(book)
 
-            if request.method == "POST":    
-                if request.POST.get("returnBook"):
-                    item.delete()
+    if request.method == "POST":    
+        if request.POST.get("returnBook"):
+            owing_book.delete()
 
-                    notification_heading = "Book Returning"
-                    notification_message = f"{member.name} returned a '{item.book.title}': {item.copy.unique_number}"
-                    alert = Notification.objects.create(heading=notification_heading, message=notification_message)
-                    alert.save()
+            notification_heading = "Book Returning"
+            notification_message = f"{member.name} returned '{owing_book.book.title}': {owing_book.copy.unique_number}"
+            alert = Notification.objects.create(heading=notification_heading, message=notification_message)
+            alert.save()
 
-                    messages.info(request, 'Book has being returned')
-                    return redirect("core:member_detail", member.id)
+            messages.info(request, 'Book has being returned')
+            return redirect("core:member_detail", member.id)
 
     if request.method == "POST":
         if request.POST.get("remove"):
@@ -90,11 +87,10 @@ def member_detail(request, pk):
             messages.success(request, "Membership terminated successfully")
             return redirect("core:member_list")
 
-    return render(request, "core/member-detail2.html", {"member": member, "book": book})
+    return render(request, "core/member-detail2.html", {"member": member, "owing": owing_book})
 
 
 def book_borrow(request, pk):
-    current_user = request.user
 
     book = Book.objects.all()
     member = Membership.objects.get(id=pk)
@@ -105,38 +101,46 @@ def book_borrow(request, pk):
         if form.is_valid():
             book_name = form.cleaned_data["book"]
             return_date = request.POST["return_date"]
-            unique_num = request.POST["unique_num"]            
+            unique_num = request.POST["unique_num"]
 
-            if Book.objects.filter(title=book_name).exists():
-                the_book = Book.objects.get(title=book_name)
+            if return_date:     
+                print(return_date)      
 
-                if Copy.objects.filter(unique_number=unique_num):
-                    book_copy = Copy.objects.get(unique_number=unique_num)
+                if Book.objects.filter(title=book_name).exists():
+                    the_book = Book.objects.get(title=book_name)
 
-                    if the_book == book_copy.book:
+                    if Copy.objects.filter(unique_number=unique_num):
+                        book_copy = Copy.objects.get(unique_number=unique_num)
 
-                        if BorrowedBook.objects.filter(copy=book_copy.id).exists():
-                            messages.info(request, "Book with that serial number has been borrowed")
-                            return redirect("core:book_borrow", member.id)
+                        if the_book == book_copy.book:
+
+                            if BorrowedBook.objects.filter(copy=book_copy.id).exists():
+                                messages.info(request, "Book with that serial number has been borrowed")
+                                return redirect("core:book_borrow", member.id)
+                            else:
+                                borrow_book = BorrowedBook.objects.create(book=book_name, copy=book_copy, 
+                                                                            borrower=member, date_to_be_returned=return_date)
+
+                                borrow_book.save()
+
+                                notification_heading = "Book Borrowing"
+                                notification_message = f"{member.email} borrowed '{book_name}' with serial number '{book_copy}'"
+                                alert = Notification.objects.create(heading=notification_heading, message=notification_message)
+                                alert.save()
+
+                                messages.success(request, "Book borrowed successfully")
+                                return redirect("core:member_detail", member.id)
                         else:
-                            borrow_book = BorrowedBook.objects.create(book=book_name, copy=book_copy, 
-                                                                        borrower=member, date_to_be_returned=return_date)
-
-                            borrow_book.save()
-
-                            notification_heading = "Book Borrowing"
-                            notification_message = f"{member.email} borrowed '{book_name}' with serial number '{book_copy}'"
-                            alert = Notification.objects.create(heading=notification_heading, message=notification_message)
-                            alert.save()
-
-                            messages.success(request, "Book borrowed successfully")
-                            return redirect("core:member_detail", member.id)
+                            messages.info(request, "Book doesn't have such serial number")
+                            return redirect("core:book_borrow", member.id)
                     else:
-                        messages.info(request, "Book doesn't have such serial number")
+                        messages.info(request, "Serial number doesn't exists")
                         return redirect("core:book_borrow", member.id)
                 else:
-                    messages.info(request, "Serial number doesn't exists")
-                    return redirect("core:book_borrow", member.id)
+                    pass
+            else:
+                messages.info(request, "A return date must be given")
+                return redirect("core:book_borrow", member.id)
 
     else:
         return render(request, "core/book-borrow.html", {"book": book, "member": member, "form": form})
@@ -252,8 +256,6 @@ def book_detail(request, pk):
 
 def book_update(request, pk):
     current_user = request.user
-    if Library.objects.filter(owner=current_user):
-        library = Library.objects.get(owner=current_user)
 
     book = Book.objects.get(id=pk)
     book_amount =  book.quantity_serial.all()
@@ -354,8 +356,6 @@ def book_update(request, pk):
 
 def book_delete(request, pk):
     current_user = request.user
-    if Library.objects.filter(owner=current_user):
-        library = Library.objects.get(owner=current_user)
 
     book = Book.objects.get(id=pk)
     book_amount = book.quantity_serial.all()    
@@ -406,10 +406,9 @@ def profile_member(request):
     borrowed_counter = 0
 
     for item in member:
-        if item.library_name.owner == request.user:
-            member_counter += 1
-            if item.borrowed_book_name.exists():
-                borrowed_counter += 1
+        member_counter += 1
+        if item.borrowed_book.exists():
+            borrowed_counter += 1
                 
 
     return render(request, "profile/members.html", {"member_counter": member_counter,
@@ -417,19 +416,17 @@ def profile_member(request):
 
 
 def profile_book(request):
-    book_amount = BookAmount.objects.all()
+    book_amount = Copy.objects.all()
     borrowed_book = BorrowedBook.objects.all()
     book_counter = 0
     book = 0
 
     for item in book_amount:
-        if item.book.library_name.owner == request.user:
-            book_counter += 1
+        book_counter += 1
 
 
     for item2 in borrowed_book:
-        if item2.book.library_name.owner == request.user:
-            book += 1
+        book += 1
 
 
 
@@ -437,24 +434,8 @@ def profile_book(request):
                                                     "borrowed_book": book})
 
 
-def profile_library_delete(request):
-    the_libarary = Library.objects.get(owner=request.user)
-    current_user = request.user
-
-    if request.method == "POST":
-        if request.POST.get('Sure'):
-            the_libarary.delete()
-            current_user.delete()
-            return redirect("account:login")
-
-    return render(request, 'profile/library-option.html')
-
 
 def profile_password_change(request):
-    current_user = request.user
-    if Library.objects.filter(owner=current_user):
-        library = Library.objects.get(owner=current_user)
-
 
     if request.method == "POST":
         old_password = request.POST["old_password"]
@@ -482,7 +463,7 @@ def profile_password_change(request):
                             '''Try to make change password to not log out'''
                             notification_heading = "Password Change"
                             notification_message = f"Your account password was changed"
-                            alert = Notification.objects.create(library_name=library, heading=notification_heading, message=notification_message)
+                            alert = Notification.objects.create(heading=notification_heading, message=notification_message)
                             alert.save()
 
                             messages.success(request, "Password Changed Successfully")

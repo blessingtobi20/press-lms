@@ -71,7 +71,7 @@ class Book(models.Model):
 
 
 class Copy(models.Model):
-    book = models.Foreign   Key(Book, related_name="copies", on_delete=models.CASCADE)
+    book = models.ForeignKey(Book, related_name="copies", on_delete=models.CASCADE)
     unique_number = models.CharField(max_length=1000)
 
     def __str__(self):

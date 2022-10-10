@@ -3,11 +3,23 @@ from .forms import AccountCreationForm
 from .models import User
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
-from core.models import Notification
+from core.models import Notification, BorrowedBook
+import datetime
 
 # Create your views here.
 
 def landing_page(request):
+    book = BorrowedBook.objects.all()
+    clock = datetime.datetime.now()
+    date = clock.date()
+
+    for copy in book:
+        if copy.date_to_be_returned == date:
+            notification_heading = "Due Book Return"
+            notification_message = f"{copy.borrower.name} borrowed a book on {copy.date_borrowed} to be returned on {copy.date_to_be_returned}"
+            alert = Notification.objects.create(heading=notification_heading, message=notification_message)
+            alert.save()
+
     return render(request, 'account/landing_page.html')
 
 
