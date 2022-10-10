@@ -1,6 +1,9 @@
 from copy import copy
+from datetime import datetime, timedelta
 from email import message
+from turtle import left
 from django.shortcuts import render, redirect
+
 from .models import BorrowedBook, Membership, Notification, Book, Copy
 from .forms import BookCreationForm, MembershipCreationForm, BookBorrowingForm
 from .serial_num_generator import auto_generate
@@ -63,10 +66,13 @@ def member_detail(request, pk):
 
     member = Membership.objects.get(id=pk)
 
+    days_left = ""
+
     owing_book = []
     if member.borrowed_book.exists():
         owing_book = BorrowedBook.objects.get(borrower=member)
-        
+        days = owing_book.date_to_be_returned - owing_book.date_borrowed
+        days_left = days.days        
 
     if request.method == "POST":    
         if request.POST.get("returnBook"):
@@ -87,7 +93,7 @@ def member_detail(request, pk):
             messages.success(request, "Membership terminated successfully")
             return redirect("core:member_list")
 
-    return render(request, "core/member-detail2.html", {"member": member, "owing": owing_book})
+    return render(request, "core/member-detail2.html", {"member": member, "owing": owing_book, "days_left": days_left})
 
 
 def book_borrow(request, pk):
@@ -100,8 +106,11 @@ def book_borrow(request, pk):
         form = BookBorrowingForm(request.POST)
         if form.is_valid():
             book_name = form.cleaned_data["book"]
-            return_date = request.POST["return_date"]
             unique_num = request.POST["unique_num"]
+            date = datetime.now()
+            return_date = date + timedelta(days=7)
+
+            print(return_date)
 
             if return_date:     
                 print(return_date)      
@@ -124,7 +133,7 @@ def book_borrow(request, pk):
                                 borrow_book.save()
 
                                 notification_heading = "Book Borrowing"
-                                notification_message = f"{member.email} borrowed '{book_name}' with serial number '{book_copy}'"
+                                notification_message = f"'{member.name}' borrowed '{book_name}' with serial number '{book_copy}'"
                                 alert = Notification.objects.create(heading=notification_heading, message=notification_message)
                                 alert.save()
 
@@ -163,9 +172,8 @@ def book_create(request):
         if form.is_valid():
             title = form.cleaned_data['title']
             author = form.cleaned_data['author']
-            location = form.cleaned_data['location']
 
-            new_book = Book.objects.create(title=title, author=author, location=location)
+            new_book = Book.objects.create(title=title, author=author)
             new_book.save()
 
             return redirect("core:book_copy", new_book.id)
@@ -175,7 +183,6 @@ def book_create(request):
             return redirect("core:book_create")
     else:
         return render(request, "core/book-create-form.html", {"form": form})
-
 
 
 def copy_create(request, pk):
@@ -222,13 +229,14 @@ def copy_create(request, pk):
     return render(request, 'core/copy-create-form.html', {"book": book})
 
 
-
 def book_detail(request, pk):
     book = Book.objects.get(id=pk)
     book_copy = book.copies.all()
 
+    copy_id = BorrowedBook.objects.all()
+
+
     borrowed_book_amount = 0
-    
     books = [] # "books" is for borrowed books
 
     for item in book_copy:
@@ -237,35 +245,37 @@ def book_detail(request, pk):
             books.append(item)
 
     optional = 0
-    # the purpose of using optional is to check whether a book has being borrowed
-    # therefore it can't be deleted or updated
-    for book in book_copy: 
-        while book.borrowed_book_copy.exists():
+
+    for booking in book_copy: 
+        while booking.borrowed_book_copy.exists():
             optional += 1
             break
         else:
             pass
+    
+    print(copy_id)
       
-    return render(request, "core/book-detail.html", {"book": book,
+    return render(request, "core/book-detail2.html", {"book": book,
                                                     "books_borrowed": books,
                                                     "borrowed_book_amount": borrowed_book_amount,
                                                     "book_copy": book_copy,
                                                     "books": books,
-                                                    "optional": optional})
+                                                    "optional": optional,
+                                                    "copy_id": copy_id})
 
 
 def book_update(request, pk):
     current_user = request.user
 
     book = Book.objects.get(id=pk)
-    book_amount =  book.quantity_serial.all()
+    book_amount =  book.copies.all()
     book_form = BookCreationForm(instance=book)
 
     optional = 0
     # the purpose of using optional is to check whether a book has being borrowed
     # therfore it can't be updated
     for item in book_amount: 
-        while item.borrowed_book_serial.exists():
+        while item.borrowed_book_copy.exists():
             optional += 1
             break
         else:
@@ -285,7 +295,6 @@ def book_update(request, pk):
                 author = book_form.cleaned_data['author']
                 location = book_form.cleaned_data['location']
                 quantity = book_form.cleaned_data['quantity']
-                image = book_form.cleaned_data['cover']
 
                 if request.POST.get("keep_changes"):
                     # appending new copies and old copies
@@ -294,7 +303,7 @@ def book_update(request, pk):
                         while amount < quantity:
                             amount += 1
                             serial = auto_generate(n=10)
-                            new_book_copy = BookAmount.objects.create(book=book, serial_number=serial)
+                            new_book_copy = Copy.objects.create(book=book, serial_number=serial)
                             new_book_copy.save()
                             book_amount_list.append(new_book_copy)
 
@@ -302,13 +311,12 @@ def book_update(request, pk):
                         book.author = author
                         book.location = location
                         book.quantity = len(book_amount_list)
-                        book.image = image
 
                         book.save()
 
                         notification_heading = "Book Update"
                         notification_message = f"Edited '{title}' book with ({quantity}) added copies"
-                        alert = Notification.objects.create(library_name=library, heading=notification_heading, message=notification_message)
+                        alert = Notification.objects.create(heading=notification_heading, message=notification_message)
                         alert.save()
 
                         messages.success(request, "Update successful")
@@ -321,21 +329,21 @@ def book_update(request, pk):
                     if amount < quantity:
                         # Deleting previous copies
                         for item in book_amount_list:
-                            if BookAmount.objects.filter(serial_number=item).exists():
+                            if Copy.objects.filter(serial_number=item).exists():
                                 item.delete()
 
                         # adding new copies
                         while amount < quantity:
                             amount += 1
                             serial = auto_generate(n=10)
-                            new_book_copy = BookAmount.objects.create(book=book, serial_number=serial)
+                            new_book_copy = Copy.objects.create(book=book, serial_number=serial)
                             new_book_copy.save()
 
                         book_form.save()
 
                         notification_heading = "Book Update"
                         notification_message = f"Edited '{title}' book with ({quantity}) new copies"
-                        alert = Notification.objects.create(library_name=library, heading=notification_heading, message=notification_message)
+                        alert = Notification.objects.create(heading=notification_heading, message=notification_message)
                         alert.save()
 
                         messages.success(request, 'Update Successful')
@@ -355,17 +363,16 @@ def book_update(request, pk):
 
 
 def book_delete(request, pk):
-    current_user = request.user
 
     book = Book.objects.get(id=pk)
-    book_amount = book.quantity_serial.all()    
+    book_amount = book.copies.all()    
 
 
     optional = 0
     # the purpose of using optional is to check whether a book has being borrowed
     # therfore it can't be deleted
     for item in book_amount: 
-        while item.borrowed_book_serial.exists():
+        while item.borrowed_book_copy.exists():
             optional += 1
             break
         else:
@@ -376,7 +383,7 @@ def book_delete(request, pk):
 
         notification_heading = "Book Deleting"
         notification_message = f"Deleted '{book.title}' book and ({book.quantity}) copies with it"
-        alert = Notification.objects.create(library_name=library, heading=notification_heading, message=notification_message)
+        alert = Notification.objects.create(heading=notification_heading, message=notification_message)
         alert.save()
 
         messages.success(request, "Book removed successfully")
@@ -432,7 +439,6 @@ def profile_book(request):
 
     return render(request, "profile/books.html", {"book_counter": book_counter,
                                                     "borrowed_book": book})
-
 
 
 def profile_password_change(request):

@@ -30,7 +30,7 @@
 </style>
 
 
-<h1 style="text-align: center;">Login your account</h1>
+<h1 style="text-align: center;">Login to continue</h1>
 <hr>
 
 {% for message in messages %}
@@ -52,9 +52,7 @@
         <br>
         <input type="password", class="textinput textInput form-control" placeholder="Password", name="password">
         <br>
-        
-        <p>Don't have an account? <a href="{% url 'account:signup' %}">click here</a></p>
-        
+                
         <input type="submit", value="Login", class="w-50 btn btn-primary">
     </form>
 

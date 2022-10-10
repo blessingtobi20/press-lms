@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block content %}
+
+<style type="text/css">
+    .alert{
+        height: 40px;
+        width: 50%;
+        display: flex;
+        justify-content: center;
+    }
+    .alert svg{
+        width: 20px;
+    }
+    .text{
+        margin-left: 10px;
+    }
+    .book-detail{
+        display: flex;
+        margin-top: 10px;
+    }
+    .book-quantity{
+        margin-left: 2%;
+    }
+    .serial-heading{
+        font-size: 30px;
+    }
+    .book-quantity-list li{
+        font-size: 20px;
+        list-style: none;
+    }
+    .card-header button{
+        margin-left: 13px;
+    }
+    .book-copy{
+        font-weight: 600;
+        margin-right: 5px;
+    }
+    .book-copy a{
+        text-decoration: none;
+        color: rgb(29, 108, 173);
+    }
+    .list-group-item{
+        display: flex;
+    }
+    .list-group-item button{
+        margin-left: 10px;
+    }
+</style>
+
+<h2>Book: {{ book.title }}</h2>
+<hr><br>
+
+
+{% for message in messages %}
+<div class="alert alert-success d-flex align-items-center" role="alert">
+    <svg class="bi flex-shrink-0 me-2" role="img" aria-label="Success:"><use xlink:href="#check-circle-fill"/></svg>
+    <div class="text">
+        {{ message }}
+    </div>
+</div>
+{% endfor %}
+
+
+<div class="book-detail">
+
+    <div class="card mb-3" style="height: 10%;">
+        <div class="row g-0">
+            <div class="col-md-4">
+                <img src="{% static 'assets/img/open-book.png' %}" class="img-fluid rounded-start" width="400">
+            </div>
+
+            <div class="col-md-8">
+
+                <div class="card-body">
+
+                    <h3 class="card-title ">Author: {{ book.author }}</h3><hr>
+                    <h4 class="card-text ">Location: {{ book.location }}</h4><br>
+
+                    <h3 class="card-text"><small class="text-muted">Total Quantity: {{ book.quantity }}</small></h3>
+                    <h3 class="card-text"><small class="text-muted">Borrowed: {{ borrowed_book_amount }}</small></h3>
+
+                    <div class="d-grid gap-3 d-md-flex justify-content-md-end">
+
+                        {% if optional > 0 %}
+                            <button class="btn btn-secondary me-md-2" type="button">Update</button>
+                            <button class="btn btn-secondary" type="button">Delete</button>
+                        {% else %}
+                            <a href="{% url 'core:book_update' book.id %}"><button class="btn btn-primary me-md-2" type="button">Update</button></a>
+
+                            <a href="{% url 'core:book_delete' book.id %}"><button class="btn btn-danger" type="button">Delete</button></a>
+                        {% endif %}
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+   
+    <!-- To get all the book serial numbers available -->
+    <div class="book-quantity">
+        <div class="card" style="width: 23rem;">
+
+            <div class="card-header">
+                Book Copies
+                <button class="btn btn-secondary btn-sm" >Add copies</button>
+            </div>
+
+            <!-- To get borrowed books or not -->
+            {% for book in book_copy %}
+                <ul class="list-group list-group-flush">
+
+                    {% if book in books %}
+                        <li class="list-group-item">
+                            <div class="book-copy">
+                                Book: {{ book.unique_number }} 
+                                
+                                {% for copy in copy_id %}
+                                    {% if copy.copy.unique_number == book.unique_number %}
+                                        <a href="{% url 'core:member_detail' copy.borrower.id %}">
+                                            ( borrowed )
+                                        </a>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+    
+                            <button class="btn btn-secondary btn-sm", name="removeCopy", value="removeCopy">
+                                remove
+                            </button>
+                        </li>
+                    {% else %}
+                        <li class="list-group-item">
+                            <div class="book-copy">
+                                Book: {{ book.unique_number }} ( available )
+                            </div>
+
+                            <button class="btn btn-danger btn-sm", name="removeCopy", value="removeCopy">
+                                remove
+                            </button>
+                        </li>
+                    {% endif %}
+                </ul>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+
+{% endblock content %}

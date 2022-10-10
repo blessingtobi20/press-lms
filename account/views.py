@@ -19,6 +19,9 @@ def landing_page(request):
             notification_message = f"{copy.borrower.name} borrowed a book on {copy.date_borrowed} to be returned on {copy.date_to_be_returned}"
             alert = Notification.objects.create(heading=notification_heading, message=notification_message)
             alert.save()
+    
+    if request.user.is_authenticated:
+        return redirect('core:book_list')
 
     return render(request, 'account/landing_page.html')
 

@@ -1,4 +1,5 @@
 from random import choices
+from re import T
 from django.db import models
 from datetime import datetime
 from account.models import User
@@ -38,16 +39,16 @@ class Membership(models.Model):
     email = models.EmailField()
     gender = models.CharField(max_length=20)
     phone_number = models.CharField(max_length=15)
-    reg = models.CharField(max_length=50)
-    current_level = models.CharField(max_length=2000, choices=LEVEL)
+    reg = models.CharField(max_length=50, null=True, blank=True)
+    current_level = models.CharField(max_length=2000, choices=LEVEL, null=True, blank=True)
 
     # address
-    residence_hall = models.CharField(max_length=20, choices=HALLS)
-    room = models.CharField(max_length=5)
+    residence_hall = models.CharField(max_length=20, choices=HALLS, null=True, blank=True)
+    room = models.CharField(max_length=5, null=True, blank=True)
 
     # college
-    college = models.CharField(max_length=500, choices=COLLEAGE)
-    department = models.CharField(max_length=500)
+    college = models.CharField(max_length=500, choices=COLLEAGE, null=True, blank=True)
+    department = models.CharField(max_length=500, null=True, blank=True)
 
     date_joined = models.DateTimeField(default=datetime.now)
 
@@ -62,7 +63,6 @@ class Membership(models.Model):
 class Book(models.Model):
     title = models.CharField(max_length=500)
     author = models.CharField(max_length=200)
-    location = models.CharField(max_length=500)
     quantity = models.PositiveIntegerField(default=0)
     date_created = models.DateTimeField(default=datetime.now)
 
@@ -83,7 +83,7 @@ class BorrowedBook(models.Model):
     book = models.ForeignKey(Book, related_name="borrowed_book", on_delete=models.CASCADE)
     copy = models.ForeignKey(Copy, related_name="borrowed_book_copy", on_delete=models.CASCADE)
     borrower = models.ForeignKey(Membership, related_name="borrowed_book", on_delete=models.CASCADE)
-    date_borrowed = models.DateTimeField(default=datetime.now)
+    date_borrowed = models.DateField(default=datetime.now)
     date_to_be_returned = models.DateField()
 
 

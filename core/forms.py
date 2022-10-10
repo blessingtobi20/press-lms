@@ -8,7 +8,6 @@ class BookCreationForm(forms.ModelForm):
         fields = (
             "title",
             "author",
-            "location",
         )
 
 
