@@ -77,18 +77,17 @@
                 <div class="card-body">
 
                     <h3 class="card-title ">Author: {{ book.author }}</h3><hr>
-                    <h4 class="card-text ">Location: {{ book.location }}</h4><br>
 
-                    <h3 class="card-text"><small class="text-muted">Total Quantity: {{ book.quantity }}</small></h3>
+                    <h3 class="card-text"><small class="text-muted">Total Quantity: {{ total_quantity }}</small></h3>
                     <h3 class="card-text"><small class="text-muted">Borrowed: {{ borrowed_book_amount }}</small></h3>
 
                     <div class="d-grid gap-3 d-md-flex justify-content-md-end">
 
+                        <a href="{% url 'core:book_update' book.id %}"><button class="btn btn-primary me-md-2" type="button">Update</button></a>
+                        
                         {% if optional > 0 %}
-                            <button class="btn btn-secondary me-md-2" type="button">Update</button>
                             <button class="btn btn-secondary" type="button">Delete</button>
                         {% else %}
-                            <a href="{% url 'core:book_update' book.id %}"><button class="btn btn-primary me-md-2" type="button">Update</button></a>
 
                             <a href="{% url 'core:book_delete' book.id %}"><button class="btn btn-danger" type="button">Delete</button></a>
                         {% endif %}
@@ -104,45 +103,46 @@
     <div class="book-quantity">
         <div class="card" style="width: 23rem;">
 
+
             <div class="card-header">
-                Book Copies
-                <button class="btn btn-secondary btn-sm" >Add copies</button>
+                <form method="post">
+                    {% csrf_token %}
+                    <button class="btn btn-secondary btn-sm" name="addCopy" value="addCopy">Add copies</button>
+                </form>
             </div>
 
             <!-- To get borrowed books or not -->
-            {% for book in book_copy %}
-                <ul class="list-group list-group-flush">
+            {% for i in unique %}
+                {% if i.book == book %}
+                    <ul class="list-group list-group-flush">
 
-                    {% if book in books %}
-                        <li class="list-group-item">
-                            <div class="book-copy">
-                                Book: {{ book.unique_number }} 
+                        {% if i in books %}
+                            <li class="list-group-item">
+                                <div class="book-copy">
+                                    PSGL: {{ i.unique_number }} 
+                                    
+                                    {% for copy in copy_id %}
+                                        {% if copy.copy.unique_number == i.unique_number %}
+                                            <a href="{% url 'core:member_detail' copy.borrower.id %}">
+                                                ( borrowed )
+                                            </a>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+        
+                                <input type="button" class="btn btn-secondary btn-sm" value="Remove">
+                            </li>
+                        {% else %}
+                            <li class="list-group-item">
+                                <div class="book-copy">
+                                    PSGL: {{ i.unique_number }} ( available )
+                                </div>
                                 
-                                {% for copy in copy_id %}
-                                    {% if copy.copy.unique_number == book.unique_number %}
-                                        <a href="{% url 'core:member_detail' copy.borrower.id %}">
-                                            ( borrowed )
-                                        </a>
-                                    {% endif %}
-                                {% endfor %}
-                            </div>
-    
-                            <button class="btn btn-secondary btn-sm", name="removeCopy", value="removeCopy">
-                                remove
-                            </button>
-                        </li>
-                    {% else %}
-                        <li class="list-group-item">
-                            <div class="book-copy">
-                                Book: {{ book.unique_number }} ( available )
-                            </div>
-
-                            <button class="btn btn-danger btn-sm", name="removeCopy", value="removeCopy">
-                                remove
-                            </button>
-                        </li>
-                    {% endif %}
-                </ul>
+                                <a href="{% url 'core:copy_remove' i.id %}"><input type="button" class="btn btn-danger btn-sm" value="Remove"></a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                {% endif %}
             {% endfor %}
         </div>
     </div>

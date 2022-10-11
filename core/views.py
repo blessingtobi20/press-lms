@@ -1,12 +1,12 @@
 from copy import copy
 from datetime import datetime, timedelta
 from email import message
+from itertools import count
 from turtle import left
 from django.shortcuts import render, redirect
 
-from .models import BorrowedBook, Membership, Notification, Book, Copy
+from .models import BorrowedBook, Membership, Notification, Book, Copy, ReturnCount
 from .forms import BookCreationForm, MembershipCreationForm, BookBorrowingForm
-from .serial_num_generator import auto_generate
 from django.contrib import messages
 from account.models import User
 from django.contrib.auth.decorators import login_required
@@ -71,8 +71,27 @@ def member_detail(request, pk):
     owing_book = []
     if member.borrowed_book.exists():
         owing_book = BorrowedBook.objects.get(borrower=member)
-        days = owing_book.date_to_be_returned - owing_book.date_borrowed
-        days_left = days.days        
+        current_date = datetime.now()
+        # days = owing_book.date_to_be_returned - (current_date.date() + timedelta(days=7))
+        days = owing_book.date_to_be_returned - current_date.date()
+        days_left = days.days
+
+        print(days_left)
+
+        if ReturnCount.objects.filter(member=member).exists():
+            days_left = days_left - 1
+
+        if days_left == 0:
+            count = ReturnCount.objects.create(member=member, count=days_left)
+            count.save
+
+            notification_heading = "Book Return Due"
+            notification_message = f"'{member.name}' has reached the book return date for '{owing_book.book}'( {owing_book.copy} )"
+            alert = Notification.objects.create(heading=notification_heading, message=notification_message)
+            alert.save()
+
+    print(days_left)
+
 
     if request.method == "POST":    
         if request.POST.get("returnBook"):
@@ -82,6 +101,10 @@ def member_detail(request, pk):
             notification_message = f"{member.name} returned '{owing_book.book.title}': {owing_book.copy.unique_number}"
             alert = Notification.objects.create(heading=notification_heading, message=notification_message)
             alert.save()
+
+            if ReturnCount.objects.filter(member=member).exists():
+                counting = ReturnCount.objects.get(member=member)
+                counting.delete()
 
             messages.info(request, 'Book has being returned')
             return redirect("core:member_detail", member.id)
@@ -229,15 +252,41 @@ def copy_create(request, pk):
     return render(request, 'core/copy-create-form.html', {"book": book})
 
 
+def copy_remove(request, pk):
+    if not request.user.is_authenticated:
+        return redirect('account:login')
+
+    copy = Copy.objects.get(id=pk)
+    book = copy.book
+
+    copy.delete()
+    
+    notification_heading = "Book Copy Removal"
+    notification_message = f"'{book}' book's copy '{copy.unique_number}' has being removed"
+    alert = Notification.objects.create(heading=notification_heading, message=notification_message)
+    alert.save()
+
+    messages.info(request, "Copy removed successfully")
+
+    return redirect("core:book_detail", book.id)
+
+
 def book_detail(request, pk):
     book = Book.objects.get(id=pk)
     book_copy = book.copies.all()
+
+    counting = book.copies.count()
+    book.quantity = counting
+    book.save()  
+
+    unique = Copy.objects.all()
 
     copy_id = BorrowedBook.objects.all()
 
 
     borrowed_book_amount = 0
-    books = [] # "books" is for borrowed books
+
+    books = []
 
     for item in book_copy:
         if BorrowedBook.objects.filter(copy=item).exists():
@@ -252,16 +301,21 @@ def book_detail(request, pk):
             break
         else:
             pass
-    
-    print(copy_id)
+                
+
+    if request.POST.get("addCopy"):
+        return redirect('core:book_copy', book.id)
+
       
     return render(request, "core/book-detail2.html", {"book": book,
                                                     "books_borrowed": books,
+                                                    "total_quantity": counting,
                                                     "borrowed_book_amount": borrowed_book_amount,
                                                     "book_copy": book_copy,
                                                     "books": books,
                                                     "optional": optional,
-                                                    "copy_id": copy_id})
+                                                    "copy_id": copy_id,
+                                                    "unique": unique})
 
 
 def book_update(request, pk):
@@ -293,68 +347,25 @@ def book_update(request, pk):
             if book_form.is_valid():
                 title = book_form.cleaned_data['title']
                 author = book_form.cleaned_data['author']
-                location = book_form.cleaned_data['location']
-                quantity = book_form.cleaned_data['quantity']
 
                 if request.POST.get("keep_changes"):
                     # appending new copies and old copies
-                    amount = 0
-                    if amount < quantity:
-                        while amount < quantity:
-                            amount += 1
-                            serial = auto_generate(n=10)
-                            new_book_copy = Copy.objects.create(book=book, serial_number=serial)
-                            new_book_copy.save()
-                            book_amount_list.append(new_book_copy)
+                    book.title = title
+                    book.author = author
 
-                        book.title = title
-                        book.author = author
-                        book.location = location
-                        book.quantity = len(book_amount_list)
+                    book.save()
 
-                        book.save()
+                    notification_heading = "Book Update"
+                    notification_message = f"Edited '{title}' book"
+                    alert = Notification.objects.create(heading=notification_heading, message=notification_message)
+                    alert.save()
 
-                        notification_heading = "Book Update"
-                        notification_message = f"Edited '{title}' book with ({quantity}) added copies"
-                        alert = Notification.objects.create(heading=notification_heading, message=notification_message)
-                        alert.save()
-
-                        messages.success(request, "Update successful")
-                        return redirect("core:book_detail", book.id)
-                    else:
-                        messages.info(request, "Book quantity field error")
-                        return redirect("core:book_update", book.id)
+                    messages.success(request, "Update successful")
+                    return redirect("core:book_detail", book.id)
+      
                 else:
-                    amount = 0
-                    if amount < quantity:
-                        # Deleting previous copies
-                        for item in book_amount_list:
-                            if Copy.objects.filter(serial_number=item).exists():
-                                item.delete()
-
-                        # adding new copies
-                        while amount < quantity:
-                            amount += 1
-                            serial = auto_generate(n=10)
-                            new_book_copy = Copy.objects.create(book=book, serial_number=serial)
-                            new_book_copy.save()
-
-                        book_form.save()
-
-                        notification_heading = "Book Update"
-                        notification_message = f"Edited '{title}' book with ({quantity}) new copies"
-                        alert = Notification.objects.create(heading=notification_heading, message=notification_message)
-                        alert.save()
-
-                        messages.success(request, 'Update Successful')
-                        return redirect("core:book_detail", book.id)
-                    else:
-                        messages.info(request, "Book quantity field error")
-                        return redirect("core:book_update", book.id)
-            else:
-                messages.info(request, 'Form input is invalid!')
-                return redirect("core:book_update", book.id)
-                    
+                    messages.info(request, 'You did not verify the book update')
+                    return redirect('core:book_update', book.id)
                     
     return render(request, 'core/book-update.html', {"book_form": book_form,
                                                     "book": book,
@@ -488,3 +499,13 @@ def profile_password_change(request):
             return redirect("core:profile_password_change")
     else:
         return render(request, "profile/password-change.html")
+
+
+def error_404(request, exception):
+    data = {}
+    return render(request, 'error/404_error.html', data)
+
+
+def error_500(request):
+    data = {}
+    return render(request, 'error/500_error.html', data)

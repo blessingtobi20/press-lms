@@ -95,3 +95,11 @@ class Notification(models.Model):
 
     def __str__(self):
         return self.account.username
+
+
+class ReturnCount(models.Model):
+    member = models.OneToOneField(Membership, on_delete=models.CASCADE)
+    count = models.IntegerField()
+
+    def __str__(self):
+        return f"{self.member.name} is due" 

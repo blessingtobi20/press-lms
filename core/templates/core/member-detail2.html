@@ -86,12 +86,27 @@
 
 <!-- the member info -->
 <div class="member">
+
     {% if member.reg %}
 
         {% if member.gender == "male" %}
-            <img src="{% static 'assets/img/circle male.png' %}" alt="" width="200">
+            {% if days_left > 0 %}
+                <img src="{% static 'assets/img/male avatar good.png' %}" alt="" width="200">
+            {% elif days_left < 1 %}
+                <img src="{% static 'assets/img/male avatar due.png' %}" alt="" width="200">
+            {% else %}
+                <img src="{% static 'assets/img/circle male.png' %}" alt="" width="200">
+            {% endif %}
+
         {% elif member.gender == "female" %}
-            <img src="{% static 'assets/img/circle female.png' %}" alt="" width="200">
+            {% if days_left > 0 %}
+                <img src="{% static 'assets/img/female avatar good.png' %}" alt="" width="200">
+            {% elif days_left < 1 %}
+                <img src="{% static 'assets/img/female avatar due.png' %}" alt="", width="200">
+            {% else %}
+                <img src="{% static 'assets/img/circle female.png' %}" alt="" width="200">
+            {% endif %}
+
         {% endif %}
 
         <div class="member-name">
@@ -156,9 +171,21 @@
     {% else %}
 
         {% if member.gender == "male" %}
-            <img src="{% static 'assets/img/circle male.png' %}" alt="" width="200">
+            {% if days_left > 0 %}
+                <img src="{% static 'assets/img/male avatar good.png' %}" alt="" width="200">
+            {% elif days_left < 1 %}
+                <img src="{% static 'assets/img/male avatar due.png' %}" alt="" width="200">
+            {% else %}
+                <img src="{% static 'assets/img/circle male.png' %}" alt="" width="200">
+            {% endif %}
         {% elif member.gender == "female" %}
-            <img src="{% static 'assets/img/circle female.png' %}" alt="" width="200">
+            {% if days_left > 0 %}
+                <img src="{% static 'assets/img/female avatar good.png' %}" alt="" width="200">
+            {% elif days_left < 1 %}
+                <img src="{% static 'assets/img/female avatar due.png' %}" alt="", width="200">
+            {% else %}
+                <img src="{% static 'assets/img/circle female.png' %}" alt="" width="200">
+            {% endif %}
         {% endif %}
 
         <div class="member-name">
@@ -203,7 +230,7 @@
                 {% csrf_token %}
 
                 {% if owing %}
-                    <a href="{% url 'core:book_detail' owing.book.id %}">{{ owing.book|truncatechars:25  }}: {{ owing.copy }}</a>
+                    <a href="{% url 'core:book_detail' owing.book.id %}">{{ owing.book|truncatechars:25  }}: PSGL {{ owing.copy }}</a>
                     <button class="btn btn-primary btn-sm", name="returnBook", value="returnBook">
                         Return Book
                     </button>
