@@ -90,29 +90,95 @@
             <div class="row g-0">
             
                 {% if member.gender == "male" %}
+
                     {% if member.reg %}
-                        <div class="col-md-4">
-                            <br>
-                            <img src="{% static 'assets/img/male with badge.png' %}" class="img-fluid rounded-start" alt="...">
-                        </div>
+                        {% if member.borrowed_book.exists %}
+                            {% if days > 0 %}
+                                <div class="col-md-4" style="background-color: green">
+                                    <br>
+                                    <img src="{% static 'assets/img/male with badge.png' %}" class="img-fluid rounded-start" alt="...">
+                                </div>
+                            {% elif days < 1 %}
+                                <div class="col-md-4" style="background-color: red">
+                                    <br>
+                                    <img src="{% static 'assets/img/male with badge.png' %}" class="img-fluid rounded-start" alt="...">
+                                </div>
+                            {% endif %} 
+                        {% else %}
+                            <div class="col-md-4">
+                                <br>
+                                <img src="{% static 'assets/img/male with badge.png' %}" class="img-fluid rounded-start" alt="...">
+                            </div>
+                        {% endif %}
+
                     {% else %}
+                        {% if member.borrowed_book.exists %}
+                            {% if days > 0 %}
+                                <div class="col-md-4" style="background-color: green">
+                                    <br>
+                                    <img src="{% static 'assets/img/male avatar.png' %}" class="img-fluid rounded-start" alt="...">
+                                </div>
+                            {% elif days < 1 %}
+                                <div class="col-md-4" style="background-color: red">
+                                    <br>
+                                    <img src="{% static 'assets/img/male avatar.png' %}" class="img-fluid rounded-start" alt="...">
+                                </div>
+                            {% endif %} 
+                        {% else %}
                         <div class="col-md-4">
                             <br>
                             <img src="{% static 'assets/img/male avatar.png' %}" class="img-fluid rounded-start" alt="...">
                         </div>
+                        {% endif %}
                     {% endif %}
+
+
                 {% elif member.gender == "female" %}
                     {% if member.reg %}
-                        <div class="col-md-4">
-                            <br>
-                            <img src="{% static 'assets/img/female with badge.png' %}" class="img-fluid rounded-start" alt="...">
-                        </div>
+
+                        {% if member.borrowed_book.exists %}
+                            {% if days > 0 %}
+                                <div class="col-md-4" style="background-color: green">
+                                    <br>
+                                    <img src="{% static 'assets/img/female with badge.png' %}" class="img-fluid rounded-start" alt="...">
+                                </div>
+                            {% elif days < 1 %}
+                                <div class="col-md-4" style="background-color: red">
+                                    <br>
+                                    <img src="{% static 'assets/img/female with badge.png' %}" class="img-fluid rounded-start" alt="...">
+                                </div>
+                            {% endif %} 
+                        {% else %}
+                            <div class="col-md-4">
+                                <br>
+                                <img src="{% static 'assets/img/female with badge.png' %}" class="img-fluid rounded-start" alt="...">
+                            </div>
+                        {% endif %}
+
+                        
                     {% else %}
-                        <div class="col-md-4">
-                            <br>
-                            <img src="{% static 'assets/img/female avatar.png' %}" class="img-fluid rounded-start" alt="...">
-                        </div>
+
+                        {% if member.borrowed_book.exists %}
+                            {% if days > 0 %}
+                                <div class="col-md-4" style="background-color: green">
+                                    <br>
+                                    <img src="{% static 'assets/img/female with badge.png' %}" class="img-fluid rounded-start" alt="...">
+                                </div>
+                            {% elif days < 1 %}
+                                <div class="col-md-4" style="background-color: red">
+                                    <br>
+                                    <img src="{% static 'assets/img/female with badge.png' %}" class="img-fluid rounded-start" alt="...">
+                                </div>
+                            {% endif %} 
+
+                        {% else %}
+                            <div class="col-md-4">
+                                <br>
+                                <img src="{% static 'assets/img/female avatar.png' %}" class="img-fluid rounded-start" alt="...">
+                            </div>
+                        {% endif %}
                     {% endif %}
+
                 {% endif %}
 
                 <div class="col-md-8">

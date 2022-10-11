@@ -14,6 +14,7 @@ urlpatterns = [
     path('book/<int:pk>', views.book_detail, name="book_detail"),
     path('book/<int:pk>/update', views.book_update, name="book_update"),
     path('book/<int:pk>/delete', views.book_delete, name="book_delete"),
+    path('book/delete/<int:pk>/confirm', views.book_delete_confirmation, name="book_delete_confirmation"),
 
     # membership
     path('member', views.member_list, name="member_list"),
@@ -25,6 +26,7 @@ urlpatterns = [
 
     # notification
     path('notification', views.notification, name="notification"),
+    path('notification/clear', views.notification_clear, name="notification_clear"),
 
     # profile
     path('profile', views.profile, name="profile"),

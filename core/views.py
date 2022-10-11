@@ -19,7 +19,34 @@ from django.contrib.auth import authenticate, login
 def member_list(request):
     member = Membership.objects.all()
     borrowedbooks = BorrowedBook.objects.all()
-    return render(request, "core/member-list.html", {"member": member, "books": borrowedbooks})
+
+    days_left = ""
+    
+    for m in member:
+        if m.borrowed_book.exists():
+            owing_book = BorrowedBook.objects.get(borrower=m)
+
+            '''Getting the borrow period'''
+            current_date = datetime.now()
+            days = owing_book.date_to_be_returned - current_date.date()
+            # days = owing_book.date_to_be_returned - (current_date.date() + timedelta(days=7) )
+
+            days_left = days.days
+
+
+            if ReturnCount.objects.filter(member=m).exists():
+                days_left = days_left - 1
+
+            if days_left == 0:
+                count = ReturnCount.objects.create(member=m, count=days_left)
+                count.save
+
+                notification_heading = "Book Return Due"
+                notification_message = f"'{m.name}' has reached the book return date for '{owing_book.book}'( {owing_book.copy} )"
+                alert = Notification.objects.create(heading=notification_heading, message=notification_message)
+                alert.save()
+
+    return render(request, "core/member-list.html", {"member": member, "books": borrowedbooks, "days": days_left})
 
 
 def member_create(request):
@@ -62,7 +89,6 @@ def member_create(request):
 
 
 def member_detail(request, pk):
-    current_user = request.user
 
     member = Membership.objects.get(id=pk)
 
@@ -71,26 +97,15 @@ def member_detail(request, pk):
     owing_book = []
     if member.borrowed_book.exists():
         owing_book = BorrowedBook.objects.get(borrower=member)
+
+        '''Getting the borrow period'''
         current_date = datetime.now()
-        # days = owing_book.date_to_be_returned - (current_date.date() + timedelta(days=7))
         days = owing_book.date_to_be_returned - current_date.date()
         days_left = days.days
 
-        print(days_left)
-
         if ReturnCount.objects.filter(member=member).exists():
-            days_left = days_left - 1
-
-        if days_left == 0:
-            count = ReturnCount.objects.create(member=member, count=days_left)
-            count.save
-
-            notification_heading = "Book Return Due"
-            notification_message = f"'{member.name}' has reached the book return date for '{owing_book.book}'( {owing_book.copy} )"
-            alert = Notification.objects.create(heading=notification_heading, message=notification_message)
-            alert.save()
-
-    print(days_left)
+                days_left = days_left - 1
+     
 
 
     if request.method == "POST":    
@@ -211,6 +226,9 @@ def book_create(request):
 def copy_create(request, pk):
     book = Book.objects.get(id=pk)
 
+    counting = book.copies.count()
+    counting = counting + 1
+
     if request.method == 'POST':
 
         if request.POST.get('save'):
@@ -220,11 +238,21 @@ def copy_create(request, pk):
             
             book_number = request.POST.get('book_number')
 
+            if Copy.objects.filter(book=book).exists():
+                if Copy.objects.filter(unique_number=book_number).exists():
+                    messages.error(request, f"Book number with '{book_number}' already exists")
+                    return redirect("core:book_copy", book.id)
+
             copy = Copy.objects.create(book=book, unique_number=book_number)
             copy.save
             
             book.quantity = book.quantity + 1
             book.save()
+
+            notification_heading = "Book Copy Added"
+            notification_message = f"New copy 'PSGL: {copy.unique_number}' for '{book}' book has being added "
+            alert = Notification.objects.create(heading=notification_heading, message=notification_message)
+            alert.save() 
 
             messages.success(request, 'Copy added successfully')
             return redirect("core:book_detail", book.id)
@@ -237,11 +265,21 @@ def copy_create(request, pk):
 
             book_number = request.POST.get('book_number')
 
+            if Copy.objects.filter(book=book).exists():
+                if Copy.objects.filter(unique_number=book_number).exists():
+                    messages.error(request, f"Book number with '{book_number}' already exists")
+                    return redirect("core:book_copy", book.id)
+
             copy = Copy.objects.create(book=book, unique_number=book_number)
             copy.save
 
             book.quantity = book.quantity + 1
             book.save()
+
+            notification_heading = "Book Copy Added"
+            notification_message = f"New copy 'PSGL: {copy.unique_number}' for '{book}' book has being added "
+            alert = Notification.objects.create(heading=notification_heading, message=notification_message)
+            alert.save()
 
             messages.info(request, 'Copy added successfully')
             return redirect("core:book_copy", book.id)
@@ -249,7 +287,7 @@ def copy_create(request, pk):
         elif request.POST.get('exit'):
             return redirect("core:book_detail", book.id)
 
-    return render(request, 'core/copy-create-form.html', {"book": book})
+    return render(request, 'core/copy-create-form.html', {"book": book, "counting": counting})
 
 
 def copy_remove(request, pk):
@@ -262,7 +300,7 @@ def copy_remove(request, pk):
     copy.delete()
     
     notification_heading = "Book Copy Removal"
-    notification_message = f"'{book}' book's copy '{copy.unique_number}' has being removed"
+    notification_message = f"'{book}' book's copy 'PSGL: {copy.unique_number}' has being removed"
     alert = Notification.objects.create(heading=notification_heading, message=notification_message)
     alert.save()
 
@@ -390,25 +428,64 @@ def book_delete(request, pk):
             pass
         
     if request.POST.get("confirmDelete"):
-        book.delete()
-
-        notification_heading = "Book Deleting"
-        notification_message = f"Deleted '{book.title}' book and ({book.quantity}) copies with it"
-        alert = Notification.objects.create(heading=notification_heading, message=notification_message)
-        alert.save()
-
-        messages.success(request, "Book removed successfully")
-        return redirect("core:book_list")
+        return redirect('core:book_delete_confirmation', book.id)
 
 
     return render(request, "core/book-delete.html", {"book": book, "optional": optional})
 
+
+def book_delete_confirmation(request, pk):
+    book = Book.objects.get(id=pk)
+
+    if request.method == "POST":
+        password =  request.POST.get('Password')
+
+        if request.user.is_authenticated:
+            user = User.objects.get(email=request.user.email)
+
+            if user.check_password(password):
+                book.delete()
+
+                notification_heading = "Book Deleting"
+                notification_message = f"Deleted '{book.title}' book and ({book.quantity}) copies with it"
+                alert = Notification.objects.create(heading=notification_heading, message=notification_message)
+                alert.save()
+
+                messages.success(request, "Book removed successfully")
+                return redirect("core:book_list")
+
+
+    return render(request, 'core/book_delete_confirmation.html', {"book": book})
 
 
 '''notifications'''
 def notification(request):
     notify = Notification.objects.all()
     return render(request, 'core/notification.html', {"notify": notify})
+
+
+def notification_clear(request):
+    notify = Notification.objects.all()
+
+    if request.method == "POST":
+        password = request.POST.get('Password')
+
+        if request.user.is_authenticated:
+            user = User.objects.get(email=request.user.email)
+
+            if user.check_password(password):
+                notify.delete()
+
+                messages.success(request, 'Notification has being cleared')
+                return redirect('core:notification')
+            else:
+                messages.info(request, 'invalid password')
+                return redirect("core:notification_clear")
+        else:
+            return redirect("account:login")
+
+
+    return render(request, "core/password_confirmation.html")
 
 
 '''profile'''
@@ -439,14 +516,8 @@ def profile_book(request):
     book_counter = 0
     book = 0
 
-    for item in book_amount:
-        book_counter += 1
-
-
-    for item2 in borrowed_book:
-        book += 1
-
-
+    book_counter = book_amount.count()
+    book = borrowed_book.count()
 
     return render(request, "profile/books.html", {"book_counter": book_counter,
                                                     "borrowed_book": book})
@@ -499,13 +570,3 @@ def profile_password_change(request):
             return redirect("core:profile_password_change")
     else:
         return render(request, "profile/password-change.html")
-
-
-def error_404(request, exception):
-    data = {}
-    return render(request, 'error/404_error.html', data)
-
-
-def error_500(request):
-    data = {}
-    return render(request, 'error/500_error.html', data)
