@@ -15,15 +15,34 @@ class Membership(models.Model):
         ("Deborah", "Deborah"),
         ("Dorcas", "Dorcas"),
         ("Isaac", "Isaac"),
-        ("Daniel", "Daniel"),
         ("Joseph", "Joseph"),
         ("Sarah", "Sarah"),
     )
-    COLLEAGE = (
-        ("College of Pure and Applied Sciences", "College of Pure and Applied Sciences"),
-        ("College of Engineering", "College of Engineering"),
-        ("College of Business and Social Sciences", "College of Business and Social Sciences"),
-        ("College of Agricultural Sciences", "College of Agricultural Sciences"),
+
+    COLLEGE = (
+        ("Accounting", "Accounting"),
+        ("Agricultural Economics", "Agricultural Economics"),
+        ("Agricultural Extension & Rural Development", "Agricultural Extension & Rural Development"),
+        ("Agriculture & Exosystem Engineering", "Agriculture & Exosystem Engineering"),
+        ("Animal Science", "Animal Science"),
+        ("Biochemistry", "Biochemistry"),
+        ("Business Administration", "Business Administration"),
+        ("Chemical Engineering", "Chemical Engineering"),
+        ("Civil Engineering", "Civil Engineering"),
+        ("Computer Science", "Computer Science"),
+        ("Crop Science", "Crop Science"),
+        ("Economics", "Economics"),
+        ("Electrical and Information Engineering", "Electrical and Information Engineering"),
+        ("Food Science and Nutrition / Microbiology", "Food Science and Nutrition / Microbiology"),
+        ("Industrial Chemistry", "Industrial Chemistry"),
+        ("International Relations", "International Relations"),
+        ("Mass Communication", "Mass Communication"),
+        ("Mathematics", "Mathematics"),
+        ("Mechanical Engineering", "Mechanical Engineering"),
+        ("Mechatronics Engineering ", "Mechatronics Engineering"),
+        ("Political Science", "Political Science"),
+        ("Sociology", "Sociology"),
+        ("Soil Science", "Soil Science"),    
     )
 
     LEVEL = (
@@ -47,8 +66,7 @@ class Membership(models.Model):
     room = models.CharField(max_length=5, null=True, blank=True)
 
     # college
-    college = models.CharField(max_length=500, choices=COLLEAGE, null=True, blank=True)
-    department = models.CharField(max_length=500, null=True, blank=True)
+    department = models.CharField(max_length=500, null=True, blank=True, choices=COLLEGE)
 
     date_joined = models.DateTimeField(default=datetime.now)
 

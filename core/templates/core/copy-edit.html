@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<style type="text/css">
+    .alert{
+        height: 40px;
+    }
+    .alert svg{
+        width: 20px;
+    }
+    .alert svg{
+        margin-left: 40%;
+    }
+    .text{
+        margin-left: 10px;
+    }
+    form{
+        /* border: 1px solid black; */
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        margin-left: 40%;
+    }
+    form input[type=text]{
+        width: 64%;
+     
+    }
+    .copy-form-btn{
+        display: flex;
+    }
+    .copy-form-btn input{
+        margin-left: 10px;
+
+    }
+    .heading{
+        display: flex;
+        justify-content: center;
+    }
+</style>
+
+
+<div class="heading">
+    <h1>Edit copy ( {{ copy.unique_number }} ) for "{{ book }}" <hr></h1>
+</div>
+
+
+
+
+{% for message in messages %}
+    {% if message.message == 'Copy added successfully'  %}
+        <div class="alert alert-success d-flex align-items-center" role="alert">
+            <svg class="bi flex-shrink-0 me-2" role="img" aria-label="Success:"><use xlink:href="#check-circle-fill"/></svg>
+            <div class="text">
+                {{ message }}
+            </div>
+        </div>
+    {% else %}
+        <div class="alert alert-danger d-flex align-items-center" role="alert">
+            <svg class="bi flex-shrink-0 me-2" role="img" aria-label="Danger:"><use xlink:href="#exclamation-triangle-fill"/></svg>
+            <div class="text">
+                {{ message }}
+            </div>
+        </div>
+    {% endif %}
+        
+{% endfor %}
+
+
+<form method="post">
+    {% csrf_token %}
+
+    <div class="form-floating mb-3">
+        <input type="text" name="book_number" class="form-control", placeholder="Unique number" id="floatingInput">
+        <label for="floatingInput">Unique Number</label>
+    </div>
+    
+    <br>
+
+    <div class="copy-form-btn">
+        <input type="submit", name="save", value="Save", class="btn btn-primary w-50">
+        <input type="submit", name="exit", value="Cancel", class="btn btn-danger w-20">
+    </div>
+
+</form>
+
+
+{% endblock content %}

@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% load crispy_forms_tags %}
+
+<style type="text/css">
+    .alert{
+        height: 40px;
+        /* width: 50%; */
+        display: flex;
+        justify-content: center;
+    }
+    .alert svg{
+        width: 20px;
+    }
+    .text{
+        margin-left: 10px;
+    }
+    .btn{
+        width: 100%;
+    }
+    .button{
+        width: 10px;
+    }
+</style>
+
+{% block content %}
+
+
+{% for message in messages %}
+<div class="alert alert-success d-flex align-items-center" role="alert">
+    <svg class="bi flex-shrink-0 me-2" role="img" aria-label="Success:"><use xlink:href="#check-circle-fill"/></svg>
+    <div class="text">
+        {{ message }}
+    </div>
+</div>
+{% endfor %}
+
+
+<h1>Update: {{ member.name }}</h1>
+
+{% if member.borrowed_book.exists %}
+    <div class="alert alert-danger d-flex align-items-center" role="alert">
+        <svg class="bi flex-shrink-0 me-2" role="img" aria-label="Danger:"><use xlink:href="#exclamation-triangle-fill"/></svg>
+        <div class="text">
+            Return Book before editing member
+        </div>
+    </div>
+{% else %}
+    <form action="", method="post" class="">
+        {% csrf_token %}
+        {{ form | crispy }}
+        <br>
+
+        <div class="d-grid gap-2">
+            <input type="submit", value="Save", class="btn btn-success">
+        </div>
+    </form>
+{% endif %}
+
+
+
+
+{% endblock content %}

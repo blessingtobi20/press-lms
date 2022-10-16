@@ -13,7 +13,7 @@
     /* border: 1px solid black; */
    }
    .links{
-    padding-top: 13px;
+    padding-top: 20px;
     /* border: 1px solid black; */
     /* margin-left: 349px; */
    }
@@ -39,36 +39,39 @@
   }
   .logo-name{
     font-size: 40px;
+    margin-bottom: -20px;
   }
-
+  .logo{
+    /* border: 1px solid black; */
+  }
+  .search{
+    /* border: 1px solid black; */
+    padding-top: 20px;
+  }
+  .search input{
+    width: 400px;
+  }
 </style>
 
 
 <div class="buttons">
   
-
-  
   <div class="logo logo-name" >
-
-    Press<img src="{% static 'assets/img/press logo.png' %}" alt="" style="width: 60px; height: 50px;" >Library
-
+    Press<img src="{% static 'assets/img/press logo.png' %}" alt="" style="width: 100px; height: 80px;" >Library
   </div>
 
-  <!-- {% if request.user.is_authenticated %}
-    <p class="logo-name">logged as: {{ request.user.username }}  </p>
-  {% endif %} -->
 
   <div class="links">
     {% if request.user.is_authenticated %}
       <a href="{% url 'core:member_list' %}">Members</a>
       <a href="{% url 'core:book_list' %}">Books</a>
       <a href="{% url 'core:notification' %}">Notification</a>
-      <a href="{% url 'core:profile' %}">profile</a>
+      <a href="{% url 'core:profile' %}">Profile</a>
     {% else %}
 
     {% endif %}
   </div>
-  
+
 </div>
 
 <br>

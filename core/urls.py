@@ -10,6 +10,7 @@ urlpatterns = [
 
     path('book/create/<int:pk>', views.copy_create, name="book_copy"),
     path('book/copy/remove/<int:pk>', views.copy_remove, name="copy_remove"),
+    path('book/copy/edit/<int:pk>', views.copy_edit, name="copy_edit"),
     
     path('book/<int:pk>', views.book_detail, name="book_detail"),
     path('book/<int:pk>/update', views.book_update, name="book_update"),
@@ -20,6 +21,8 @@ urlpatterns = [
     path('member', views.member_list, name="member_list"),
     path('member/create', views.member_create, name="member_create"),
     path('member/<int:pk>', views.member_detail, name="member_detail"),
+    path('member/<int:pk>/update', views.member_update, name="member_update"),
+    path('member/delete/<int:pk>', views.delete_member_confirmation, name="delete_member"),
 
     # borrow a book
     path('member/<int:pk>/borrow', views.book_borrow, name="book_borrow"),

@@ -34,7 +34,7 @@
         width: 40px;
     }
     .borrowing{
-        margin-top: -350px;
+        margin-top: -250px;
         margin-left: 700px;
         max-width: 500px;
         display: flex;
@@ -67,6 +67,25 @@
         position: relative;
         top: -50px;
     }
+    .terminate{
+        /* border: 1px solid black; */
+        position: relative;
+        top: -60px;
+        left: 350px;
+        max-width: 220px;
+    }
+    .edit-btn button{
+        width: 100%;
+    }
+    .days{
+        /* border: 1px solid black; */
+        position: relative;
+        top: -60px;
+        left: 350px;
+        max-width: 220px;
+        font-size: 20px;
+        margin-left: 90px;
+    }
 </style>
 
 
@@ -76,13 +95,13 @@
 <div class="alert alert-success d-flex align-items-center" role="alert">
     <svg class="bi flex-shrink-0 me-2" role="img" aria-label="Success:"><use xlink:href="#check-circle-fill"/></svg>
     <div class="text">
-        {{ message }}
+    {{ message }}
     </div>
 </div>
 {% endfor %}
 
 
-<h1>Member Detail <hr> </h1>
+<h2>Member Detail <hr> </h2>
 
 <!-- the member info -->
 <div class="member">
@@ -216,32 +235,56 @@
 
     <div class="action-buttons">
         {% if member.borrowed_book.exists %}
+            <div class="borrowed-book">
+                <div class="card" style="width: 20rem;">
+        
+                    <div class="card-header">
+                        Borrowed Book
+                    </div>
+        
+                    <form method="post" class="borrow-form">
+                        {% csrf_token %}
+        
+                        {% if owing %}
+                            <a href="{% url 'core:book_detail' owing.book.id %}">{{ owing.book|truncatechars:25  }}: PSGL {{ owing.copy }}</a>
+                            <button class="btn btn-primary btn-sm", name="returnBook", value="returnBook">
+                                Return Book
+                            </button>
+                            <br>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
         {% else %}
             <a href="{% url 'core:book_borrow' member.id %}"><button class="btn btn-primary" style="width: 200px;">Borrow a Book</button></a>
         {% endif %}
     </div>
 
-    <div class="borrowed-book">
-        <div class="card" style="width: 30rem;">
-
-            <div class="card-header">
-                Borrowed Book
-            </div>
-
-            <form method="post" class="borrow-form">
-                {% csrf_token %}
-
-                {% if owing %}
-                    <a href="{% url 'core:book_detail' owing.book.id %}">{{ owing.book|truncatechars:25  }}: PSGL {{ owing.copy }}</a>
-                    <button class="btn btn-primary btn-sm", name="returnBook", value="returnBook">
-                        Return Book
-                    </button>
-                    <br>
-                {% endif %}
-            </form>
-        </div>
-    </div>
-
 </div>
+
+
+
+{% if member.borrowed_book.exists %}
+    <div class="days">
+        Days left: {{ days_left }}
+    </div>
+{% else %}
+    <div class="terminate">
+        <a href="{% url 'core:delete_member' member.id %}">
+            <button class="btn btn-danger">
+                Terminate Membership
+            </button>
+        </a>
+    </div>
+{% endif %}
+
+
+{% if not member.borrowed_book.exists %}
+    <a href="{% url 'core:member_update' member.id %}" class="edit-btn">
+        <button class="btn btn-primary" name="editMember">
+            Edit Member
+        </button>
+    </a>
+{% endif %}
 
 {% endblock content %}

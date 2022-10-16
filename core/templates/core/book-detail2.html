@@ -48,6 +48,9 @@
     .list-group-item button{
         margin-left: 10px;
     }
+    .list-group-item a{
+        margin-left: 10px;
+    }
 </style>
 
 <h2>Book: {{ book.title }}</h2>
@@ -138,6 +141,7 @@
                                     PSGL: {{ i.unique_number }} ( available )
                                 </div>
                                 
+                                <a href="{% url 'core:copy_edit' i.id %}"><input type="button" class="btn btn-primary btn-sm" value="Edit"></a>
                                 <a href="{% url 'core:copy_remove' i.id %}"><input type="button" class="btn btn-danger btn-sm" value="Remove"></a>
                             </li>
                         {% endif %}

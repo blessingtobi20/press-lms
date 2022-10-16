@@ -1,6 +1,6 @@
 {% extends 'profile/dashboard.html' %}
 
-{% block content2 %}
+{% block content %}
 
 <style type="text/css">
     .change-password-form{
@@ -10,7 +10,7 @@
     }
     .change-password-form input{
         width: 300px;
-        text-align: center;
+        /* text-align: center; */
     }
     .alert{
         height: 40px;
@@ -19,7 +19,7 @@
         width: 20px;
     }
     .alert svg{
-        margin-left: 30%;
+        margin-left: 43%;
     }
     .text{
         margin-left: 10px;
@@ -27,9 +27,8 @@
 </style>
 
 
-<h1>Change Account Password</h1>
+<h2 style="text-align: center;">You are about to terminate "{{member.name}}" membership</h2>
 <hr>
-
 
 {% for message in messages %}
 <div class="alert alert-danger d-flex align-items-center" role="alert">
@@ -41,21 +40,23 @@
 {% endfor %}
 
 
+<h3 style="text-align: center;">Confirm password to continue</h3>
+<br>
+
+
+
 <div class="change-password-form">
     <form method="post">
         {% csrf_token %}
     
-        <input type="password", name="old_password", placeholder="Old Password" class="textinput textInput form-control">
+        <input type="password", name="Password", placeholder="Password" class="textinput textInput form-control">
         <br>
-        <input type="password", name="new_password1", placeholder="New Password" class="textinput textInput form-control">
-        <br>
-        <input type="password", name="new_password2", placeholder="Confirm Password" class="textinput textInput form-control">
-        <br>
-        <input type="submit", value="Change" class="btn btn-success">
+
+        <input type="submit", value="Confirm" class="btn btn-success">
         <br><br>
 
-        <!-- <a href="{% url 'core:profile' %}"><input type="button" value="Go back" class="btn btn-primary"></a> -->
+        <a href="{% url 'core:member_detail' member.id %}"><input type="button" value="Cancel" class="btn btn-danger"></a>
     </form>
 </div>
 
-{% endblock content2 %}
+{% endblock content %}

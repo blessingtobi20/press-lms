@@ -11,6 +11,8 @@
         margin-bottom: 20px;
         margin-right: 20px;
         margin-bottom: -10px;
+        position: relative;
+        top: 15px;
     }
     .create-btn a{
         text-decoration: none;
@@ -44,9 +46,18 @@
     .list-heading{
         display: flex;
         justify-content: space-between;
+        /* border: 1px solid black; */
+        margin-bottom: -10px;
     }
     .heading{
         font-size: 30px;
+        position: relative;
+        top: 15px;
+    }
+    .search{
+        /* border: 1px solid black; */
+        position: relative;
+        bottom: 15px;
     }
 </style>
 
@@ -56,18 +67,31 @@
 
 {% for message in messages %}
     <div class="alert alert-success d-flex align-items-center" role="alert">
-    <svg class="bi flex-shrink-0 me-2" role="img" aria-label="Success:"><use xlink:href="#check-circle-fill"/></svg>
-    <div class="text">
-        {{ message }}   
+        <svg class="bi flex-shrink-0 me-2" role="img" aria-label="Success:"><use xlink:href="#check-circle-fill"/></svg>
+        <div class="text">
+            {{ message }}   
+        </div>
     </div>
-  </div>
 {% endfor %}
 
 
 <div class="list-heading">
     <div class="heading">
-        <h1>Memberships</h1>
+        <h2>Memberships</h2>
     </div>
+
+    {% if member %}
+        <div class="search">
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="form-floating mb-1">
+                    <input type="text" name="search" class="form-control", placeholder="Search members" id="floatingInput">
+                    <label for="floatingInput">Search members</label>
+                </div>
+            </form>
+        </div>
+    {% endif %}
 
     <div class="create-btn">
         <a href="{% url 'core:member_create' %}">
@@ -82,8 +106,7 @@
     </div>
 </div>
 
-<hr>
-
+<hr><br>
 
 {% for member in member %}
         <div class="card mb-4" style="max-width: 350px;">

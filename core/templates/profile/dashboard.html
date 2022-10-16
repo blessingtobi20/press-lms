@@ -5,19 +5,38 @@
 {% block content %}
 
 <style type="text/css">
+    .alert{
+        height: 40px;
+        /* width: 50%; */
+        display: flex;
+        justify-content: center;
+    }
+    .alert svg{
+        width: 20px;
+    }
+    .text{
+        margin-left: 10px;
+    }
     .profile{
         display: flex;
         /* border: 1px solid black; */
     }
     .content2{
         margin-left: 100px;
-    }    .alert{
-        height: 40px;
     }
 </style>
 
-<h1>Profile</h1>
+<h2>Profile</h2>
 <hr>
+
+{% for message in messages %}
+<div class="alert alert-success d-flex align-items-center" role="alert">
+    <svg class="bi flex-shrink-0 me-2" role="img" aria-label="Success:"><use xlink:href="#check-circle-fill"/></svg>
+    <div class="text">
+        {{ message }}
+    </div>
+</div>
+{% endfor %}
 
 <div class="profile">
     {% include 'profile/sidebar.html' %}

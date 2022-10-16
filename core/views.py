@@ -1,7 +1,8 @@
-from copy import copy
 from datetime import datetime, timedelta
 from email import message
 from itertools import count
+from msilib.schema import ServiceControl
+from operator import le
 from turtle import left
 from django.shortcuts import render, redirect
 
@@ -19,6 +20,16 @@ from django.contrib.auth import authenticate, login
 def member_list(request):
     member = Membership.objects.all()
     borrowedbooks = BorrowedBook.objects.all()
+
+    if request.method == 'POST':
+        if request.POST.get('search'):
+            for person in member:
+                search = request.POST.get('search')
+                if person.reg == search:
+                    return redirect('core:member_detail', person.id)
+                elif person.email == search:
+                    return redirect('core:member_detail', person.id)
+
 
     days_left = ""
     
@@ -48,7 +59,7 @@ def member_list(request):
 
     return render(request, "core/member-list.html", {"member": member, "books": borrowedbooks, "days": days_left})
 
-
+@login_required
 def member_create(request):
     current_user = request.user
 
@@ -64,14 +75,12 @@ def member_create(request):
             gender = form.cleaned_data['gender']
             hall = form.cleaned_data['residence_hall']
             room = form.cleaned_data['room']
-
-            college = form.cleaned_data['college']
             department = form.cleaned_data['department']
 
             new_member = Membership.objects.create(user=current_user, name=name, email=email, phone_number=number,
                                                     reg=reg, current_level=level, gender=gender,
                                                     residence_hall=hall, room=room, 
-                                                    college=college, department=department)
+                                                    department=department)
             new_member.save()
 
             notification_heading = "Membership Creation"
@@ -87,7 +96,7 @@ def member_create(request):
 
     return render(request, "core/member-create.html", {"form": form})
 
-
+@login_required
 def member_detail(request, pk):
 
     member = Membership.objects.get(id=pk)
@@ -100,11 +109,13 @@ def member_detail(request, pk):
 
         '''Getting the borrow period'''
         current_date = datetime.now()
-        days = owing_book.date_to_be_returned - current_date.date()
+        days = owing_book.date_to_be_returned - current_date.date() 
+        # days = owing_book.date_to_be_returned - (current_date.date() + timedelta(days=7) )
+
         days_left = days.days
 
         if ReturnCount.objects.filter(member=member).exists():
-                days_left = days_left - 1
+                days_left = days_left - days_left
      
 
 
@@ -131,9 +142,71 @@ def member_detail(request, pk):
             messages.success(request, "Membership terminated successfully")
             return redirect("core:member_list")
 
-    return render(request, "core/member-detail2.html", {"member": member, "owing": owing_book, "days_left": days_left})
+
+    return render(request, "core/member-detail.html", {"member": member, "owing": owing_book, "days_left": days_left})
 
 
+@login_required
+def member_update(request, pk):
+    member = Membership.objects.get(id=pk)
+
+    form = MembershipCreationForm(instance=member)
+    if request.method == "POST":
+        form = MembershipCreationForm(request.POST, instance=member)
+        if form.is_valid():
+            name = form.cleaned_data["name"]
+            email = form.cleaned_data["email"]
+            number = form.cleaned_data["phone_number"]
+            reg = form.cleaned_data["reg"]
+            level = form.cleaned_data['current_level']
+            gender = form.cleaned_data['gender']
+            hall = form.cleaned_data['residence_hall']
+            room = form.cleaned_data['room']
+            department = form.cleaned_data['department']
+
+            member.name = name
+            member.email = email
+            member.phone_number = number
+            member.reg = reg
+            member.current_level = level
+            member.gender = gender
+            member.residence_hall = hall
+            member.room = room
+            member.department = department
+
+            member.save()
+
+
+            messages.success(request, "Member data updated successfully!")
+            return redirect('core:member_detail', member.id)
+
+    return render(request, "core/member_update.html", {"member": member, "form": form})
+
+
+@login_required
+def delete_member_confirmation(request, pk):
+    member = Membership.objects.get(id=pk)
+
+    if request.method == "POST":
+        password =  request.POST.get('Password')
+
+        if request.user.is_authenticated:
+            user = User.objects.get(username=request.user.username)
+
+            if user.check_password(password):
+                member.delete()
+
+                messages.success(request, "Membership terminated successfully")
+                return redirect("core:member_list")
+                
+            else:
+                messages.info(request, "Invalid Password")
+                return redirect('core:delete_member', member.id)
+
+    return render(request, 'core/member_delete.html', {"member": member})
+
+
+@login_required
 def book_borrow(request, pk):
 
     book = Book.objects.all()
@@ -197,10 +270,21 @@ def book_borrow(request, pk):
 @login_required
 def book_list(request):
     book = Book.objects.all()
-    counting = 0
-    return render(request, "core/book-list.html", {"book": book, "counting": counting})
+
+    if request.method == 'POST':
+        if request.POST.get('search'):
+            for i in book:
+                search = request.POST.get('search')
+                if i.title == search:
+                    return redirect('core:book_detail', i.id)
+                elif i.copies == search:
+                    return redirect('core:book_detail', i.id)
 
 
+    return render(request, "core/book-list.html", {"book": book})
+
+
+@login_required
 def book_create(request):
     form = BookCreationForm()
 
@@ -223,6 +307,7 @@ def book_create(request):
         return render(request, "core/book-create-form.html", {"form": form})
 
 
+@login_required
 def copy_create(request, pk):
     book = Book.objects.get(id=pk)
 
@@ -240,8 +325,13 @@ def copy_create(request, pk):
 
             if Copy.objects.filter(book=book).exists():
                 if Copy.objects.filter(unique_number=book_number).exists():
-                    messages.error(request, f"Book number with '{book_number}' already exists")
+                    messages.error(request, f"This book already has a copy of '{book_number}'")
                     return redirect("core:book_copy", book.id)
+
+            elif Copy.objects.filter(unique_number=book_number).exists():
+                messages.info(request, 'A book already has this book number')
+                return redirect("core:book_copy", book.id)
+
 
             copy = Copy.objects.create(book=book, unique_number=book_number)
             copy.save
@@ -290,6 +380,7 @@ def copy_create(request, pk):
     return render(request, 'core/copy-create-form.html', {"book": book, "counting": counting})
 
 
+@login_required
 def copy_remove(request, pk):
     if not request.user.is_authenticated:
         return redirect('account:login')
@@ -309,6 +400,48 @@ def copy_remove(request, pk):
     return redirect("core:book_detail", book.id)
 
 
+@login_required
+def copy_edit(request, pk):
+    copy = Copy.objects.get(id=pk)
+    book = copy.book
+
+    if request.method == 'POST':
+
+        if request.POST.get('save'):
+            if request.POST.get('book_number') == "":
+                messages.info(request, "You did not add a book number!")
+                return redirect("core:book_copy", book.id)
+            
+            book_number = request.POST.get('book_number')
+
+            if Copy.objects.filter(book=book).exists():
+                if Copy.objects.filter(unique_number=book_number).exists():
+                    messages.error(request, f"This book already has a copy of '{book_number}'")
+                    return redirect("core:copy_edit", copy.id)
+
+            elif Copy.objects.filter(unique_number=book_number).exists():
+                messages.info(request, 'A book already has this book number')
+                return redirect("core:copy_edit", copy.id)
+
+
+            copy.unique_number = book_number
+            copy.save()
+            
+            notification_heading = "Book Copy Update"
+            notification_message = f"Edited copy 'PSGL: {copy.unique_number}' for '{book}' book"
+            alert = Notification.objects.create(heading=notification_heading, message=notification_message)
+            alert.save() 
+
+            messages.success(request, 'Copy Edited successfully')
+            return redirect("core:book_detail", book.id)
+
+        elif request.POST.get('exit'):
+            return redirect("core:book_detail", book.id)
+
+    return render(request, 'core/copy-edit.html', {"copy": copy, "book": book})
+
+
+@login_required
 def book_detail(request, pk):
     book = Book.objects.get(id=pk)
     book_copy = book.copies.all()
@@ -356,6 +489,7 @@ def book_detail(request, pk):
                                                     "unique": unique})
 
 
+@login_required
 def book_update(request, pk):
     current_user = request.user
 
@@ -411,6 +545,7 @@ def book_update(request, pk):
                                                     "optional": optional})
 
 
+@login_required
 def book_delete(request, pk):
 
     book = Book.objects.get(id=pk)
@@ -434,6 +569,7 @@ def book_delete(request, pk):
     return render(request, "core/book-delete.html", {"book": book, "optional": optional})
 
 
+@login_required
 def book_delete_confirmation(request, pk):
     book = Book.objects.get(id=pk)
 
@@ -441,7 +577,7 @@ def book_delete_confirmation(request, pk):
         password =  request.POST.get('Password')
 
         if request.user.is_authenticated:
-            user = User.objects.get(email=request.user.email)
+            user = User.objects.get(username=request.user.username)
 
             if user.check_password(password):
                 book.delete()
@@ -459,11 +595,13 @@ def book_delete_confirmation(request, pk):
 
 
 '''notifications'''
+@login_required
 def notification(request):
     notify = Notification.objects.all()
     return render(request, 'core/notification.html', {"notify": notify})
 
 
+@login_required
 def notification_clear(request):
     notify = Notification.objects.all()
 
@@ -471,7 +609,7 @@ def notification_clear(request):
         password = request.POST.get('Password')
 
         if request.user.is_authenticated:
-            user = User.objects.get(email=request.user.email)
+            user = User.objects.get(username=request.user.username)
 
             if user.check_password(password):
                 notify.delete()
@@ -489,11 +627,13 @@ def notification_clear(request):
 
 
 '''profile'''
+@login_required
 def profile(request):
     user = request.user
     return render(request, 'profile/dashboard.html', {"user": user,})
 
 
+@login_required
 def profile_member(request):
     member = Membership.objects.all()
     member_counter = 0
@@ -510,6 +650,7 @@ def profile_member(request):
                                                     "borrowed": borrowed_counter})
 
 
+@login_required
 def profile_book(request):
     book_amount = Copy.objects.all()
     borrowed_book = BorrowedBook.objects.all()
@@ -523,6 +664,7 @@ def profile_book(request):
                                                     "borrowed_book": book})
 
 
+@login_required
 def profile_password_change(request):
 
     if request.method == "POST":
@@ -533,7 +675,7 @@ def profile_password_change(request):
         if old_password and new_password1 and new_password2:
 
             if request.user.is_authenticated:
-                user = User.objects.get(email=request.user.email)
+                user = User.objects.get(username=request.user.username)
 
                 if user.check_password(old_password):
 

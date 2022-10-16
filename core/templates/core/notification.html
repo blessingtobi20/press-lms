@@ -73,22 +73,24 @@
     
     <hr>
 
-    <div class="notification">
-        {% for note in notify reversed %}
-            <ul>
-                <li>
-                    <div class="notification-head">
-                        {{ note.heading }}
-                    </div>
-                    
-                    {{ note.message }}
-                    <br>
+    {% if notify %}
+        <div class="notification">
+            {% for note in notify reversed %}
+                <ul>
+                    <li>
+                        <div class="notification-head">
+                            {{ note.heading }}
+                        </div>
+                        
+                        {{ note.message }}
+                        <br>
 
-                    {{ note.date_created }}
-                    <hr>
-                </li>
-            </ul>
-        {% endfor %}
-    </div>
+                        {{ note.date_created }}
+                        <hr>
+                    </li>
+                </ul>
+            {% endfor %}
+        </div>
+    {% endif %}
 
 {% endblock content %}

@@ -25,7 +25,6 @@ class MembershipCreationForm(forms.ModelForm):
             "phone_number",
             "reg",
             "current_level",
-            "college",
             "department",
             "residence_hall",
             "room",
