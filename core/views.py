@@ -409,7 +409,7 @@ def copy_edit(request, pk):
         if request.POST.get('save'):
             if request.POST.get('book_number') == "":
                 messages.info(request, "You did not add a book number!")
-                return redirect("core:book_copy", book.id)
+                return redirect("core:copy_edit", book.id)
             
             book_number = request.POST.get('book_number')
 
